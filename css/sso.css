@@ -1,0 +1,301 @@
+@CHARSET "UTF-8";
+
+html {
+  background-color: #DDDDFF;
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+  text-align:center;
+}
+
+.errors {
+  color :red;
+  font-weight: bold;
+}
+.ok {
+  color :green;
+  font-weight: bold;
+}
+
+/*************************** ERRORS ***************************/
+#errors {
+  margin:auto;
+  width: 75%;
+}
+
+#errors ul {
+  background-color:#EEEEEE;
+  border-color: red;
+  border-width: 2px;
+  border-style:double; 
+  
+  padding: 10px;
+  
+  overflow-x: scroll;
+}
+
+#errors ul:before {
+  content:'Errors :';
+  
+  color: red;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+#errors ul li {
+  margin-top: 5px;
+  list-style: none;
+  font-weight: bold;
+}
+#errors li.suberror {
+  margin-left:10px;
+  font-size:small;
+  list-style:inside;
+  font-weight: normal;
+}
+
+
+/** bas de page **/
+.footer {
+  font-size:smaller;
+  text-align:center;
+  margin-top:20px;
+}
+
+*[onclick], input[type=submit], input[type=button] {
+  cursor:pointer;
+}
+
+.hidden {
+  display:none;
+}
+
+.compact {
+	width:1%;
+	white-space: nowrap;
+}
+
+.overlay {
+	display:none;
+	position:fixed; 
+	top:0px; 
+	left:0px; 
+	width:100%; 
+	height:100%; 
+	z-index:99; 
+	background-color:rgba(0, 0, 0, 0.6);
+}
+
+.overlay > *:first-child {
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	background-color: white;
+	border: 2px solid black;
+	padding: 15px;
+}
+
+
+ul.ui-autocomplete li.ui-menu-item {
+	white-space: nowrap;
+}
+
+table.benchmark {
+  margin:auto;
+  font-size:inherit;
+}
+
+table.benchmark th {
+  background-color:lightgrey;
+}
+
+table.benchmark td {
+  padding:10px;
+}
+
+table.benchmark.sql {
+  text-align:left;
+}
+
+div.tabs {
+  width: 100%;
+  text-align:left;
+  float:left;
+  border-bottom: 2px solid black;
+  margin-bottom: 10px;
+}
+
+div.tabs ul {
+  list-style: outside none none;
+  margin: 0px;
+  padding: 0px;
+}
+
+div.tabs li {
+  float:left;
+
+  padding: 5px;
+  margin: 5px 0px -2px;
+   
+  white-space: nowrap;
+  border: 1px solid grey;
+  border-bottom: 2px solid black;
+  
+  border-radius: 10px 10px 0px 0px;
+}
+
+div.tabs li a {
+	text-decoration: none;
+	color: inherit;
+}
+
+div.tabs li.selected {
+  border: 1px solid black;
+  border-bottom: 2px solid #DDDDFF;
+  font-weight: bold;
+}
+
+fieldset {
+	border-width: 2px;
+}
+
+fieldset.search td {
+  text-align: left;
+}
+fieldset.search td.legend {
+  text-align:right;
+}
+
+
+/*** Pagination ***/
+.pagination {
+  width:80%;
+  text-align:center;
+  margin:auto;
+}
+
+.pagination td {
+  width:20%;
+}
+
+/*** Résultats ***/
+table.results {
+  width:100%;
+}
+
+table.results td {
+  padding:3px;
+}
+
+table.results tr:nth-child(odd) {
+  background-color:#eef5fc;
+}
+
+table.results tr:nth-child(even) {
+  background-color:#bcd4f2;
+}
+
+table.results th {
+  background-color:#000099;
+  color:white;
+}
+
+table.results th a {
+  color:white;
+}
+
+/*** Profil ***/
+table.profil {
+  width:75%; 
+  margin:auto;
+  table-layout:fixed;
+  overflow:hidden;
+}
+
+table.profil td {
+  text-align:left;
+}
+
+table.profil td.fieldname {
+  text-align:right;
+}
+table.profil td.fieldname::after {
+  content: ' : ';
+}
+.aide {
+  cursor:help;
+}
+
+/** Applications **/
+div.appli.list {
+  margin:auto;
+  whitespace: nowrap;
+  width:75%;
+  text-align:center;
+}
+
+div.appli.item {
+  min-height:64px;
+  min-width:64px;
+  background-color: #EEEEEE;
+  padding: 5px;
+  margin: 5px;
+  display:inline-block;
+}
+
+div.appli.item img {
+	display:block;
+	margin:auto;
+}
+
+table.theme.results.options {
+	width:80%;
+	margin:auto;
+}
+
+/** General **/ 
+
+#welcome {
+  text-align: center;
+  font-weight: bold;
+  margin:20px;
+}
+
+.login fieldset {
+  border:none;
+}
+
+table {
+  width:100%;
+}
+.field {
+  text-align:right;
+}
+.field:after {
+  content: ' : ';
+}
+
+.input {
+  width:50%;
+  text-align:left;
+}
+
+.submit {
+  margin:auto;
+}
+
+button img {
+	vertical-align: middle;
+}
+
+button {
+	white-space: nowrap;
+}
+
+#login_disabled {
+	width:50%;
+	height:50%;
+	padding:10%;
+	margin:auto;
+	color:red;
+	font-weight:bold;
+}

@@ -1,0 +1,8 @@
+/.buildpath
+/.project
+/.settings/
+/config/*.php
+!/config/*.example.php
+/sessions/sess*
+/test/
+/plugins

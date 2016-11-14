@@ -1,0 +1,107 @@
+@CHARSET "UTF-8";
+
+#sso_menu_container {
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+  background: inherit;
+  text-align:left;
+  position:fixed;
+  top: $offset$px;
+  left: $left$;
+  right: $right$;
+  
+  background-color: $userBgcolor$;
+  color: $userColor$;
+  
+  width:16pt;
+  height:16pt;
+
+  padding:2px 5px 10px;
+
+  z-index: 16777271; /** max on safari 3, 2147483647 for all others browsers : http://stackoverflow.com/a/25461690 **/
+}
+
+#sso_menu_container:before {
+  content: '\2630'; /* menu symbol (heaven) : &#9776; */
+  font-weight: bold;
+  font-size:16pt;
+}
+
+#sso_menu {
+  display:none;
+}
+
+#sso_menu_container:hover #sso_menu {
+  display:block;
+  position:absolute;
+  top:0px;
+  
+  left: $left$;
+  right: $right$;
+}
+
+#sso_menu {
+  text-align:center;
+  margin-left:auto;
+  cursor:pointer;
+  min-width: 120px;
+  height:100px;
+  margin: 5px;
+  z-index: 16777270; /** max-1 on safari 3, 2147483647 for all others browsers : http://stackoverflow.com/a/25461690 **/
+}
+
+#sso_user {
+  padding: 2px 5px;
+  background-color: $userBgcolor$;
+  color: $userColor$;
+  border-radius: 10px 10px 0px 0px;
+}
+
+#sso_menu ul {
+  margin: 0px;
+  padding: 0px;
+  list-style-type: none;
+  border:1px solid black;
+  color: $menuColor$;
+  background-color: $menuBgcolor$;
+  cursor:auto;
+  z-index: 16777270; /** max on safari 3, 2147483647 for all others browsers : http://stackoverflow.com/a/25461690 **/
+}
+
+#sso_menu li {
+  padding:2px;
+}
+
+#sso_menu a:link {
+	background-color: transparent;
+}
+
+#sso_menu hr {
+	width: auto;
+	color:grey;
+	border: 1px inset;
+}
+
+#sso_menu li a {
+  text-decoration:none;
+  color: $menuColor$;
+  display:inline-block;
+  width:100%;
+}
+
+#sso_menu li:hover {
+  background-color:$menuBgHover$;
+  font-weight: bold;
+}
+
+#sso_menu li:hover a {
+  color: $menuHover$;
+}
+
+#sso_menu li.separator {
+  margin-top:-5px;
+  margin-bottom:-5px;
+}
+#sso_menu li.separator:hover {
+  background-color:inherit;
+}
