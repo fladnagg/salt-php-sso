@@ -3,6 +3,9 @@
 
 use salt\Query;
 use salt\DBException;
+use salt\UpdateQuery;
+use salt\SqlExpr;
+use salt\InsertQuery;
 
 class Sso extends SsoClient {
 
@@ -66,8 +69,8 @@ class Sso extends SsoClient {
 				try {
 					$authUser = $auth->auth($user, $password);
 					if ($authUser === NULL) {
-						error_log($auth->name.' : Utilisateur inconnu '.$user);
-						$exceptions['unknown'] = new BusinessException('Utilisateur inconnu');
+						error_log($auth->name.' : Utilisateur inconnu ['.$user.']');
+						$exceptions['unknown'] = new BusinessException('Utilisateur inconnu ['.$user.']');
 					}
 				} catch (BusinessException $ex) {
 					error_log($auth->name.' : '.$ex->getMessage());
@@ -89,6 +92,12 @@ class Sso extends SsoClient {
 						}
 						break;
 					} else {
+						// user found with bad password ? we try database password
+						$authUser = $this->authDbUser($user, $password);
+						if ($authUser !== NULL) {
+							break;
+						}
+						
 						$error = '';
 						if (strlen($authUser->getError()) > 0) {
 							$error = ' ('.$authUser->getError().')';
@@ -98,7 +107,13 @@ class Sso extends SsoClient {
 						throw new BusinessException('Mot de passe incorrect pour '.$user.$error);
 					}
 				}
+			} // each Auth
+			
+			if (($authUser === NULL) || !$authUser->isLogged()) {
+				// last chance : we try database user
+				$authUser = $this->authDbUser($user, $password);
 			}
+			
 			if (($authUser !== NULL) && $authUser->isLogged()) {
 				$this->registerUserLogin($user, $authUser, $sessionOnly);
 			} else {
@@ -114,6 +129,34 @@ class Sso extends SsoClient {
 		}
 		
 		return $errorMessage;
+	}
+	
+	private function authDbUser($user, $password) {
+		global $DB;
+		
+		$authUser = NULL;
+		if (($user === SSO_DB_USER) && ($password === SSO_DB_PASS)) {
+			$local = SsoAuthMethod::getLocal();
+			$authUser = $local->auth($user, $password); // try to log
+			if ($authUser === NULL) {
+				$dbUser = SsoUser::getInitUser();
+		
+				$q = new InsertQuery($dbUser);
+				$DB->execInsert($q);
+					
+				$authUser = $local->auth($user, $password);
+		
+			} else if (!$authUser->isLogged()) { // password have been modified : update to config password
+				$q = new UpdateQuery(SsoUser::meta());
+				$q->whereAnd('id', '=', SSO_DB_USER);
+				$q->set('password', SqlExpr::func('PASSWORD', SSO_DB_PASS)->privateBinds());
+					
+				$DB->execUpdate($q);
+					
+				$authUser = $local->auth($user, $password);
+			}
+		}
+		return $authUser;
 	}
 	
 	public function checkCredentials($appli) {

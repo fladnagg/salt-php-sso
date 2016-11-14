@@ -30,18 +30,7 @@ if (count($missingObjects) > 0) {
 			$sso->session->checked_db_password = TRUE;
 
 			if (DatabaseHelper::createTablesFromObjects($DB, $missingObjects)) {
-				$adminUser = new SsoUser();
-
-				$adminUser->id = SSO_DB_USER;
-				$adminUser->name = SSO_DB_USER;
-				$adminUser->state = SsoUser::STATE_ENABLED;
-				
-				$q = new Query(Dual::meta());
-				$q->select(SqlExpr::func('PASSWORD', $Input->P->RAW->db_pass)->privateBinds(), 'pass');
-
-				$adminUser->password = \salt\first($DB->execQuery($q)->data)->pass;
-				$adminUser->admin = TRUE;
-				$adminUser->last_login = time();
+				$adminUser = SsoUser::getInitUser();
 
 				$q = new InsertQuery($adminUser);
 				$DB->execInsert($q);

@@ -11,6 +11,7 @@ use salt\Query;
 use salt\SqlDateFormat;
 use salt\SqlExpr;
 use salt\UpdateQuery;
+use salt\Dual;
 
 /**
  * @property string id
@@ -276,5 +277,32 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 			$DB->execUpdate($q);
 		}
 		return ($user!==NULL);
+	}
+	
+	public static function getInitUser() {
+		global $DB;
+
+		$initUser = new SsoUser();
+		
+		$initUser->id = SSO_DB_USER;
+		$initUser->name = SSO_DB_USER;
+		$initUser->state = SsoUser::STATE_ENABLED;
+		
+		$q = new Query(Dual::meta());
+		$q->select(SqlExpr::func('PASSWORD', SSO_DB_PASS)->privateBinds(), 'pass');
+		$initUser->password = \salt\first($DB->execQuery($q)->data)->pass;
+		
+		$q = new Query(SsoAuthMethod::meta());
+		$q->selectField('id');
+		$q->whereAnd('type', '=', SsoAuthMethod::TYPE_LOCAL);
+		$auth = \salt\first($DB->execQuery($q, new Pagination(0, 1))->data);
+		if ($auth !== NULL) {
+			$initUser->auth = $auth->id;
+		}
+		
+		$initUser->admin = TRUE;
+		$initUser->last_login = time();
+
+		return $initUser;
 	}
 }

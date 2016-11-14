@@ -7,6 +7,7 @@ use salt\FieldType;
 use salt\Pagination;
 use salt\Query;
 use salt\SqlExpr;
+use salt\InsertQuery;
 
 /**
  * @property string id
@@ -152,3 +153,4 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 		return self::$TYPES[$this->type]->auth($user, $pass, $options);
 	}
 }
+

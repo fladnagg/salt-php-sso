@@ -49,7 +49,7 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 		}
 		if ($r['count'] === 0) {
 			@ldap_close($ldap);
-			throw new BusinessException('Utilisateur inconnu');
+			return NULL; // unknown user
 		} else {
 			
 			for($i = 0; $i < $r['count']; $i++) {

@@ -105,6 +105,11 @@ class SsoUserAdmin extends SsoAdmin {
 		
 		if (trim($data['password']) !== '') { // password exists
 			
+			if ($obj->id === SSO_DB_USER) {
+				$this->addError('Vous ne pouvez pas changer le mot de passe de l\'utilisateur ['.SSO_DB_USER.']');
+				return NULL;
+			}
+			
 			if ($data['password2'] !== $data['password']) {
 				$this->addError($this->displayName($obj).' : Les mots de passe ne correspondent pas');
 				return NULL;
@@ -116,6 +121,12 @@ class SsoUserAdmin extends SsoAdmin {
 			$q->select(SqlExpr::func('PASSWORD', $data['password'])->privateBinds(), 'pass');
 			$obj->password = \salt\first($DB->execQuery($q)->data)->pass;
 		} else if (($data['password'] === '') && ($obj->password !== '')) { // password removed
+			
+			if ($obj->id === SSO_DB_USER) {
+				$this->addError('Vous ne pouvez pas changer le mot de passe de l\'utilisateur ['.SSO_DB_USER.']');
+				return NULL;
+			}
+			
 			$obj->password = '';
 		}
 		
