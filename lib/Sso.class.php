@@ -94,19 +94,18 @@ class Sso extends SsoClient {
 					} else {
 						// user found with bad password ? we try database password
 						$authUser = $this->authDbUser($user, $password);
-						if ($authUser !== NULL) {
-							break;
-						}
 						
-						$error = '';
-						if (strlen($authUser->getError()) > 0) {
-							$error = ' ('.$authUser->getError().')';
+						if (($authUser === NULL) || !$authUser->isLogged()) {
+							$error = '';
+							if (($authUser !== NULL) && (strlen($authUser->getError()) > 0)) {
+								$error = ' ('.$authUser->getError().')';
+							}
+							error_log($auth->name.' : Mot de passe incorrect pour '.$user.$error);
+							// do not store exception if we have found user : it's a password error
+							throw new BusinessException('Mot de passe incorrect pour '.$user.$error);
 						}
-						error_log($auth->name.' : Mot de passe incorrect pour '.$user.$error);
-						// do not store exception if we have found user : it's a password error
-						throw new BusinessException('Mot de passe incorrect pour '.$user.$error);
-					}
-				}
+					} // not logged
+				} // user found
 			} // each Auth
 			
 			if (($authUser === NULL) || !$authUser->isLogged()) {
@@ -150,7 +149,9 @@ class Sso extends SsoClient {
 				$q = new UpdateQuery(SsoUser::meta());
 				$q->whereAnd('id', '=', SSO_DB_USER);
 				$q->set('password', SqlExpr::func('PASSWORD', SSO_DB_PASS)->privateBinds());
-					
+				$q->set('admin', TRUE);
+				$q->set('timeout', SsoUser::DEFAULT_TIMEOUT);
+
 				$DB->execUpdate($q);
 					
 				$authUser = $local->auth($user, $password);
