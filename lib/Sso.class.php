@@ -110,7 +110,10 @@ class Sso extends SsoClient {
 			
 			if (($authUser === NULL) || !$authUser->isLogged()) {
 				// last chance : we try database user
-				$authUser = $this->authDbUser($user, $password);
+				$dbAuthUser = $this->authDbUser($user, $password);
+				if (($dbAuthUser !== NULL) && $dbAuthUser->isLogged()) {
+					$authUser = $dbAuthUser;
+				}
 			}
 			
 			if (($authUser !== NULL) && $authUser->isLogged()) {

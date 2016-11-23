@@ -39,9 +39,6 @@ class SsoUserAdmin extends SsoAdmin {
 		$obj->state = $datas['state'];
 		
 		$obj->admin = array_key_exists('admin', $datas);
-		$obj->restrictIP = array_key_exists('restrictIP', $datas);
-		$obj->restrictAgent = array_key_exists('restrictAgent', $datas);
-		$obj->timeout = SsoUser::arrayToIntTimeout($datas['timeout']);
 		$obj->last_login = 1;
 
 		$datas['auth_group']='';
