@@ -24,7 +24,8 @@ if ($Input->P->ISSET->sso_user) {
 
 // if we are at login page with a logged session, we redirect on apps list page or previous app
 if ($sso->isLogged()) {
-	if ($sso->checkCredentials($sso->session->SSO_REDIRECT)) {
+	// resume only if we came from a page, not if we access to sso directly
+	if ($Input->S->ISSET->HTTP_REFERER && $sso->checkCredentials($sso->session->SSO_REDIRECT)) {
 		$sso->resumeApplication();
 	} else {
 		$sso->redirectApplications();
