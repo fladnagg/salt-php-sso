@@ -121,7 +121,7 @@ class SsoClient {
 			try {
 				$this->initApplication();
 			} catch (\Exception $ex) {
-				error_log('SSO APP INIT ERROR: '.$ex->getMessage());
+				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.$SERVER['REQUEST_URI'].')');
 				$this->session->logout();
 				header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.self::AUTH_KO_INIT_APP);
 				die();
@@ -201,25 +201,25 @@ class SsoClient {
 		if ($this->session->SSO_TIMEOUT === 0) {
 			$sessionid = $Input->C->RAW->{Session::SSO_SESSION_NAME.'0'};
 			if (session_id() !== $sessionid) {
-				error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session cookie. Destroy session');
+				error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session cookie. Destroy session ('.$SERVER['REQUEST_URI'].')');
 				$this->session->logout();
 				return self::AUTH_KO_TIMEOUT;
 			}
 		} else {
 			if ($this->session->SSO_lastTime + $this->session->SSO_TIMEOUT < time()) {
-				error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session. Destroy session');
+				error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session. Destroy session ('.$SERVER['REQUEST_URI'].')');
 				$this->session->logout();
 				return self::AUTH_KO_TIMEOUT;
 			}
 		}
 
 		if (($this->session->SSO_checkIP) && ($Input->S->RAW->REMOTE_ADDR !== $this->session->SSO_lastIP)) {
-			error_log('SSO - '.$this->session->SSO_LOGIN.' - Bad IP address. Destroy session');
+			error_log('SSO - '.$this->session->SSO_LOGIN.' - Bad IP address. Destroy session ('.$SERVER['REQUEST_URI'].')');
 			$this->session->logout();
 			return self::AUTH_KO_IP;
 		}
 		if (($this->session->SSO_checkAgent) && ($Input->S->RAW->HTTP_USER_AGENT != $this->session->SSO_lastAgent)) {
-			error_log('SSO - '.$this->session->SSO_LOGIN.' - Bad User Agent. Destroy session');
+			error_log('SSO - '.$this->session->SSO_LOGIN.' - Bad User Agent. Destroy session ('.$SERVER['REQUEST_URI'].')');
 			$this->session->logout();
 			return self::AUTH_KO_AGENT;
 		}
@@ -253,7 +253,7 @@ class SsoClient {
 					return TRUE;
 				}
 			}
-			error_log('SSO - '.$this->session->SSO_LOGIN.' - No credential found for '.$appli);
+			error_log('SSO - '.$this->session->SSO_LOGIN.' - No credential found for '.$appli.' ('.$SERVER['REQUEST_URI'].')');
 		}
 		return FALSE;
 	}

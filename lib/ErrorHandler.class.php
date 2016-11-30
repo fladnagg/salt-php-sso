@@ -43,7 +43,7 @@ class ErrorHandler {
 	 * @param \Exception $exception
 	 */
 	public static function handleException($exception) {
-		error_log($exception);
+		error_log($exception.' on '.$SERVER['REQUEST_URI']);
 
 		if (ini_get('error_reporting') == 0) {
 			return;
