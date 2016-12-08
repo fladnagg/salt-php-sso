@@ -4,6 +4,11 @@ use salt\Field;
 
 class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 
+	private static $HELP=array(
+		'field_id' => "Nom du champ contenant l'identifiant unique de l'utilisateur retourné par le LDAP",
+		'field_name' => "Nom du champ contenant le nom de l'utilisateur retourné par le LDAP",
+	);
+	
 	public function getOptions($value = NULL) {
 
 		return array(
@@ -12,6 +17,8 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 			Field::newText('bind_dn', 'Compte connexion')->displayOptions(array('size'=>80)),
 			Field::newText('bind_pass', 'Mot de passe')->displayOptions(array('size'=>40)),
 			Field::newText('dn', 'Base DN')->displayOptions(array('size'=>80)),
+			Field::newText('field_id', 'Champ ID')->displayOptions(array('title' => self::$HELP['field_id'])),
+			Field::newText('field_name', 'Champ Name')->displayOptions(array('title' => self::$HELP['field_name'])),
 		);
 	}
 

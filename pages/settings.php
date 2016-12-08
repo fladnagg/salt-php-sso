@@ -93,9 +93,9 @@ ViewControl::edit();
 	</tr>
 	<tr>
 		<td class="fieldname">Vérifier l'adresse IP</td>
-		<td><?= $user->FORM->restrictIP ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="aide" class="aide"/></td>
+		<td><?= $user->FORM->restrictIP ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="Cliquez pour afficher l'aide" class="pointer"/></td>
 	</tr>
-	<tr class="aide">
+	<tr class="pointer" title="Cliquez pour cacher l'aide">
 		<td colspan="2">
 		A chaque accès, on vérifiera que l'adresse IP de l'utilisateur correspond à celle utilisée lors du
 		dernier login. C'est une protection contre le vol de session, mais il ne faut pas l'activer si votre
@@ -105,9 +105,9 @@ ViewControl::edit();
 	</tr>
 	<tr>
 		<td class="fieldname">Vérifier le User Agent</td>
-		<td><?= $user->FORM->restrictAgent ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="aide" class="aide"/></td>
+		<td><?= $user->FORM->restrictAgent ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="Cliquez pour afficher l'aide" class="pointer"/></td>
 	</tr>
-	<tr class="aide">
+	<tr class="pointer" title="Cliquez pour cacher l'aide">
 		<td colspan="2">
 		A chaque accès, on vérifiera que le User Agent (c'est à dire une chaîne caractérisant votre navigateur)
 		correspond à celui utilisé lors du dernier login. C'est une protection contre le vol de session assez
@@ -117,9 +117,9 @@ ViewControl::edit();
 	</tr>
 	<tr>
 		<td class="fieldname">Durée de la session</td>
-		<td><?= $user->FORM->timeout ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="aide" class="aide"/></td>
+		<td><?= $user->FORM->timeout ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="Cliquez pour afficher l'aide" class="pointer"/></td>
 	</tr>
-	<tr class="aide">
+	<tr class="pointer" title="Cliquez pour cacher l'aide">
 		<td colspan="2">
 		Au bout de cette durée sans connexion ou activité, une authentification sera redemandée. 
 		Si on choisit une durée de 0, la session expirera lors de la fermeture du navigateur.
@@ -154,12 +154,12 @@ ViewControl::edit();
 </table>
 <script type="text/javascript">
 $(function() {
-	$('tr.aide').hide();
-	$('tr.aide').click(function() {
+	$('tr.pointer').hide();
+	$('tr.pointer').click(function() {
 		$(this).hide();
 	});
-	$('img[alt=aide]').click(function() {
-		$(this).closest('tr').next('tr.aide').toggle();
+	$('img.pointer').click(function() {
+		$(this).closest('tr').next('tr.pointer').toggle();
 	})
 })
 </script>

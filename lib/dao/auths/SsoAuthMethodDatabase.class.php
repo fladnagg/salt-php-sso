@@ -8,6 +8,8 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 	private static $HELP=array(
 		'authQuery' => "Requête devant remonter au moins une ligne si l'utilisateur est connu. Les placeholders :user et :password doivent être utilisés.",
 		'dataQuery' => "Requête devant remonter une ligne correspondant à l'utilisateur. Le placeholder :user doit être utilisé. Les champs remontés doivent contenir [Champ ID] et [Champ Name]",
+		'field_id' => "Nom du champ contenant l'identifiant unique de l'utilisateur retourné par la requête de donnée",
+		'field_name' => "Nom du champ contenant le nom de l'utilisateur retourné par la requête de donnée",
 	);
 	
 	public function getOptions($value = NULL) {
@@ -19,6 +21,8 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 			Field::newText('password', 'Mot de passe'),
 			Field::newText('authQuery', 'Requête de vérification')->displayOptions(array('type' => 'textarea', 'rows' => 4, 'cols' => 80, 'title' => self::$HELP['authQuery'])),
 			Field::newText('dataQuery', 'Requête de donnée')->displayOptions(array('type' => 'textarea', 'rows' => 4, 'cols' => 80, 'title' => self::$HELP['dataQuery'])),
+			Field::newText('field_id', 'Champ ID')->displayOptions(array('title' => self::$HELP['field_id'])),
+			Field::newText('field_name', 'Champ Name')->displayOptions(array('title' => self::$HELP['field_name'])),
 		);
 	}
 

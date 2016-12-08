@@ -1,7 +1,12 @@
 /**
  * Display/hide the overlay div and center this first child on screen
  */
-function showOverlayDialog($overlay, show = true) {
+function showOverlayDialog($overlay, show) {
+	
+	if (show === undefined) {
+		show = true; // no default parameter on IE...
+	}
+	
 	if (show) {
 		$overlay.show();
 		var $dialog = $overlay.children().first();

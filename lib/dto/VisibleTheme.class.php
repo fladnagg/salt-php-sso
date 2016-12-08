@@ -20,7 +20,7 @@ abstract class VisibleTheme extends Theme {
 				Field::newText('menuBgcolor', 'Couleur de fond du bloc Menu', FALSE, 'Menu'),
 				Field::newText('menuColor', 'Couleur de texte du bloc Menu', FALSE, 'MenuText'),
 				Field::newText('menuBgHover', 'Couleur de fond au survol du Menu', FALSE, 'highlight'),
-				Field::newText('menuHover', 'Couleur de texte au survol du Menu', FALSE, 'white'),
+				Field::newText('menuHover', 'Couleur de texte au survol du Menu', FALSE, 'highlightText'),
 		));
 	}
 }

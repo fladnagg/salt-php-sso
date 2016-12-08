@@ -61,7 +61,7 @@ html {
   margin-top:20px;
 }
 
-*[onclick], input[type=submit], input[type=button] {
+*[onclick], input[type=submit], input[type=button], .pointer {
   cursor:pointer;
 }
 
@@ -224,6 +224,7 @@ table.profil td.fieldname::after {
 .aide {
   cursor:help;
 }
+
 
 /** Applications **/
 div.appli.list {

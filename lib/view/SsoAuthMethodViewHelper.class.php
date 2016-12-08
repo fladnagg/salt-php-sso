@@ -9,8 +9,6 @@ class SsoAuthMethodViewHelper extends SsoGroupableViewHelper {
 	private static $HELP = array(
 		'default' => "Sera utilisé dans l'ordre alphabétique si aucune méthode n'est spécifiée pour un utilisateur",
 		'create' => "Un nouvel utilisateur authentifié depuis cette source sera créé dynamiquement dans le SSO. Dans le cas contraire, l'utilisateur sera quand même créé mais n'aura accès a rien et son compte devra être validé par un administrateur.",
-		'field_id' => "Nom du champ contenant l'identifiant de l'utilisateur",
-		'field_name' => "Nom du champ contenant le nom de l'utilisateur",
 	);
 	
 	public function column(Field $field, $format = NULL) {
@@ -63,11 +61,17 @@ class SsoAuthMethodViewHelper extends SsoGroupableViewHelper {
 
 				$fields = array();
 				$tooltip = array();
+				/** @var Field $opt */
 				foreach($options as $opt) {
 					if (!isset($values[$opt->name])) {
 						$values[$opt->name] = NULL;
 					}
-					$fields[]='<tr><td class="field">'.$Input->HTML($opt->text).'</td><td class="input">'.FormHelper::field($opt, NULL, NULL).'</td></tr>';
+					$help = '';
+					if (isset($opt->displayOptions['title'])) {
+						$help = '&nbsp;<img src="'.SSO_WEB_RELATIVE.'images/help.png" alt="aide" title="'.$Input->HTML($opt->displayOptions['title']).'" class="aide" />';
+						unset($opt->displayOptions['title']);
+					}
+					$fields[]='<tr><td class="field">'.$Input->HTML($opt->text).$help.'</td><td class="input">'.FormHelper::field($opt, NULL, NULL).'</td></tr>';
 					$tooltip[]=$opt->text.' : '.$values[$opt->name];
 				}
 				

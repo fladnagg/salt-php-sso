@@ -10,6 +10,11 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 		global $Input;
 		if ($field->name === 'auths') {
 			return $Input->HTML('Autorisations');
+		} else if ($field->name === 'password') {
+			return parent::column($field, $format).'&nbsp;'.
+				'<img src="'.SSO_WEB_RELATIVE.'images/help.png" class="aide" alt="aide" '.
+					'title="Le mot de passe n\'est nécessaire que pour le type d\'authentification &quot;'.
+					SsoAuthMethod::meta()->getField('type')->values[SsoAuthMethod::TYPE_LOCAL].'&quot;"/>';
 		} else if ($field->name === 'password2') {
 			return $Input->HTML('Confirmer le mot de passe');
 		} else {
@@ -42,8 +47,14 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 				} else {
 					$value = array();
 				}
+				
+				$title = $value;
+				if (count($title) > SSO_MAX_TOOLTIP_ELEMENTS) {
+					$title = array_slice($title, 0, SSO_MAX_TOOLTIP_ELEMENTS);
+					$title[] = '...';
+				}
 	
-				return '<span class="aide" title="'.$Input->HTML(implode("\n", $value)).'">'.$Input->HTML(count($value))
+				return '<span class="aide" title="'.$Input->HTML(implode("\n", $title)).'">'.$Input->HTML(count($value))
 					.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=credentials&amp;search[user]='.$object->id.'">'
 					.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="Modifier" title="Modifier"/>'
 					.'</a></span>';
@@ -105,7 +116,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 				if ($authsMethods === NULL) {
 					$authsMethods = array();
 					foreach(SsoAuthMethod::search(array())->data as $row) {
-						$authsMethods[$row->id] = $row->name;
+						$authsMethods[$row->id] = array('value'=> $row->name, 'title' => '');
 					}
 				}
 

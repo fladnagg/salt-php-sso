@@ -7,7 +7,6 @@ use salt\FieldType;
 use salt\Pagination;
 use salt\Query;
 use salt\SqlExpr;
-use salt\InsertQuery;
 
 /**
  * @property string id
@@ -15,8 +14,6 @@ use salt\InsertQuery;
  * @property boolean default
  * @property boolean create
  * @property int type
- * @property string field_id
- * @property string field_name
  * @property string options
  */
 class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
@@ -51,8 +48,6 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 				self::TYPE_DB => 'Base de données',
 				self::TYPE_CLASS => 'Classe',
 			)),
-			Field::newText('field_id', 'Champ ID')->sqlType('VARCHAR(32)'),
-			Field::newText('field_name', 'Champ Name')->sqlType('VARCHAR(32)'),
 			Field::newText('options', 'Paramètres', TRUE)->sqlType('TEXT'),
 		);
 	}
@@ -65,9 +60,13 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 		$auth = new SsoAuthMethod();
 		$auth->type = self::TYPE_LOCAL;
 		$auth->name = 'LOCAL';
-		$auth->field_id = 'id';
-		$auth->field_name = 'name';
 		
+		$obj = new \stdClass();
+		$obj->field_id = 'id';
+		$obj->field_name = 'name';
+		
+		$auth->options = json_encode($obj);
+
 		return $auth;
 	}
 	
@@ -158,8 +157,6 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 		if ($options  === NULL) {
 			$options = new \stdClass();
 		}
-		$options->field_id = $this->field_id;
-		$options->field_name = $this->field_name;
 
 		return self::$TYPES[$this->type]->auth($user, $pass, $options);
 	}

@@ -61,7 +61,13 @@ JS;
 				}
 				$options+=array('-1' => array('value' => '', 'class' => 'hidden', 'selected' => 'selected'));
 
-				return '<span class="aide" title="'.$Input->HTML(implode("\n", $value)).'">'.$Input->HTML(count($value)).'&nbsp;'
+				$title = $value;
+				if (count($title) > SSO_MAX_TOOLTIP_ELEMENTS) {
+					$title = array_slice($title, 0, SSO_MAX_TOOLTIP_ELEMENTS);
+					$title[] = '...';
+				}
+				
+				return '<span class="aide" title="'.$Input->HTML(implode("\n", $title)).'">'.$Input->HTML(count($value)).'&nbsp;'
 					.'<img src="'.SSO_WEB_RELATIVE.'images/edit.png" alt="Modifier" title="Modifier" onclick="$(this).parent().next(\'select\').show().removeProp(\'disabled\'); $(this).parent().hide()"/>'.'</span>'
 							// FIXME : trick for multiple select. Remove when supported by SALT
 					.FormHelper::select(SsoGroupable::GROUPS.'][', $options, $selected, array('hidden'), array('multiple' => 'multiple', 'disabled' => 'disabled', 'size' => count($options)-1));
