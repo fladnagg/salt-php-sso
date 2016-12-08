@@ -76,6 +76,22 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 				}
 				unset($criteres[self::EXISTS_NAME]);
 			}
+		} else {
+		
+			foreach($q->getSelectFields() as $select) {
+				$q->groupBy($select);
+			}
+			
+			$gElem = new Query(SsoGroupElement::meta()); // Tout les groupes liés a l'application
+			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_APPLI);
+			$q->join($gElem, 'id', '=', $gElem->getField('ref_id'), 'LEFT OUTER');
+			
+			$qGroupElem = new Query(SsoGroup::meta()); // Nom des groupes liés a l'utilisateur
+			$q->join($qGroupElem, $gElem->getField('group_id'), '=', $qGroupElem->getField('id'), 'LEFT OUTER');
+			$expr = $qGroupElem->getField('name')->distinct();
+			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
+			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), SsoGroupable::GROUPS);
+			
 		}
 		
 		foreach($criteres as $k => $v) {

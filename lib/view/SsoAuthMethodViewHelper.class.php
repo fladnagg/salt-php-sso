@@ -24,11 +24,20 @@ class SsoAuthMethodViewHelper extends SsoGroupableViewHelper {
 		return $result;
 	}
 
+	public function show(Base $object, Field $field, $value, $format, $params) {
+		
+		if (($object->type === SsoAuthMethod::TYPE_LOCAL) && ($field->name === 'create')) {
+			return ($value==0)?'Non':'Oui';
+		}
+		
+		return parent::show($object, $field, $value, $format, $params);
+	}
+	
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		
-		if (($object->type === SsoAuthMethod::TYPE_LOCAL) && (!in_array($field->name, array('in_group', 'default', 'name')))) { // READONLY on LOCAL
-			return parent::show($object, $field, $value, $format, $params);
+		if (($object->type === SsoAuthMethod::TYPE_LOCAL) && (!in_array($field->name, array('in_group', 'default', 'name', 'groups')))) { // READONLY on LOCAL
+			return self::show($object, $field, $value, $format, $params);
 		}
 		
 		switch($field->name) {

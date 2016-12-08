@@ -10,7 +10,8 @@ class SsoAppliAdmin extends SsoAdmin {
 		$this->title = 'Applications';
 		$this->object = SsoAppli::meta();
 		$this->searchFields = array('path', 'name');
-		$this->modifiableFields = array('path', 'name', 'handler', 'icon');
+		$this->modifiableFields = array('path', 'name', 'handler', 'icon', 'groups');
+		$this->extraFields = array('groups');
 		$this->newFields = array('path', 'name', 'handler', 'icon');
 		$this->hideFields = array();
 	}

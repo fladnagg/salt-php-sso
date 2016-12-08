@@ -107,6 +107,21 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 				}
 				unset($criteres[self::EXISTS_NAME]);
 			}
+		} else {
+			// with a group concat on a left outer field, we have to add a group by on each field
+			foreach($q->getSelectFields() as $select) {
+				$q->groupBy($select);
+			}
+				
+			$gElem = new Query(SsoGroupElement::meta()); // Tout les groupes liés a l'application
+			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
+			$q->join($gElem, 'id', '=', $gElem->getField('ref_id'), 'LEFT OUTER');
+				
+			$qGroupElem = new Query(SsoGroup::meta()); // Nom des groupes liés a l'utilisateur
+			$q->join($qGroupElem, $gElem->getField('group_id'), '=', $qGroupElem->getField('id'), 'LEFT OUTER');
+			$expr = $qGroupElem->getField('name')->distinct();
+			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
+			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), SsoGroupable::GROUPS);
 		}
 
 		foreach($criteres as $k => $v) {
@@ -127,10 +142,6 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 			}
 		}
 
-		// with a count on a left outer field, we have to add a group by on each field
-		foreach(self::meta()->getFieldsMetadata() as $field) {
-			$q->groupBy($field->name);
-		}
 		$q->orderAsc('name');
 
 		return $DB->execQuery($q, $pagination);

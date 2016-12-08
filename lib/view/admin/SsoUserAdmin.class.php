@@ -14,9 +14,9 @@ class SsoUserAdmin extends SsoAdmin {
 		$this->title = 'Utilisateurs';
 		$this->object = SsoUser::meta();
 		$this->searchFields = array('id', 'name', 'admin', 'state');
-		$this->modifiableFields = array('name', 'auth', 'password', 'password2', 'state', 'admin', 'restrictIP', 'restrictAgent', 'timeout');
+		$this->modifiableFields = array('name', 'auth', 'password', 'password2', 'state', 'admin', 'restrictIP', 'restrictAgent', 'timeout', 'groups');
 		$this->newFields = array('id', 'name', 'auth', 'password', 'password2', 'state', 'admin');
-		$this->extraFields = array('auths');
+		$this->extraFields = array('auths', 'groups');
 		$this->tooltipFields = array('restrictIP', 'restrictAgent', 'timeout', 'password', 'last_login', 'login_count', 'last_failed_login', 'failed_login_count');
 		$this->hideFields = array_merge($this->tooltipFields, array('password2', 'auth_group'));
 	}
@@ -81,7 +81,7 @@ class SsoUserAdmin extends SsoAdmin {
 	
 	public function updateFrom(Base $obj, array $data) {
 		global $sso;
-		
+
 		$admin = array_key_exists('admin', $data);
 		if (!$admin) {
 			if (($obj->id === $sso->getLogin()) && $obj->admin) {

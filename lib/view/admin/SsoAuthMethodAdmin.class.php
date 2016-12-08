@@ -11,7 +11,8 @@ class SsoAuthMethodAdmin extends SsoAdmin {
 		$this->title = 'Méthodes d\'authentification';
 		$this->object = SsoAuthMethod::meta();
 		$this->searchFields = array('name', 'type');
-		$this->modifiableFields = array('name', 'default', 'create', 'field_id', 'field_name', 'options');
+		$this->modifiableFields = array('name', 'default', 'create', 'field_id', 'field_name', 'options', 'groups');
+		$this->extraFields = array('groups');
 		$this->newFields = array('name', 'default', 'create', 'field_id', 'field_name', 'type');
 		$this->hideFields = array();
 	}

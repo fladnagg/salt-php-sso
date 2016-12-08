@@ -44,8 +44,6 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 			'm' => 59,
 	);
 	
-	const APPLI_SEPARATOR_CHAR = "\0";
-	
 	const DEFAULT_TIMEOUT = 259200; // 60*60*24*3; // 3 days by default
 	
 	const STATE_DISABLED = 0;
@@ -115,9 +113,16 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 
 			// Toutes ces jointures pour calculer ce champ qui est la liste des applis sur lesquelles l'utilisateur est autorisé
 			$expr = $applis->getField('name')->distinct();
-			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::APPLI_SEPARATOR_CHAR);
+			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
 			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), 'auths');
 			$q->select(SqlExpr::text(1), 'password2');
+			
+			
+			$qGroupElem = new Query(SsoGroup::meta()); // Nom des groupes liés a l'utilisateur
+			$q->join($qGroupElem, $gElem->getField('group_id'), '=', $qGroupElem->getField('id'), 'LEFT OUTER');
+			$expr = $qGroupElem->getField('name')->distinct();
+			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
+			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), SsoGroupable::GROUPS);
 		}
 		
 		if (isset($criteres[self::WITH_GROUP])) {

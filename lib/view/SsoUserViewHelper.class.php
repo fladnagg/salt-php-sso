@@ -38,7 +38,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 				}
 	
 				if ($value !== NULL) {
-					$value = explode(SsoUser::APPLI_SEPARATOR_CHAR, $value);
+					$value = explode(SsoUser::GROUP_CONCAT_SEPARATOR_CHAR, $value);
 				} else {
 					$value = array();
 				}
@@ -74,6 +74,9 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 	}
 	
 	public function edit(Base $object, Field $field, $value, $format, $params) {
+		
+		static $authsMethods = NULL;
+		
 		switch ($field->name) {
 			case 'timeout' :
 				$data = SsoUser::intTimeoutToArray($value);
@@ -99,17 +102,19 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 			break;
 			case 'auth':
 
-				$auths = array();
-				foreach(SsoAuthMethod::search(array())->data as $row) {
-					$auths[$row->id] = $row->name;
+				if ($authsMethods === NULL) {
+					$authsMethods = array();
+					foreach(SsoAuthMethod::search(array())->data as $row) {
+						$authsMethods[$row->id] = $row->name;
+					}
 				}
-				
+
 				$groupes = $this->getGroupOptions(SsoGroupElement::TYPE_AUTH, $params['tooltip']);
 				foreach($groupes as $k => $v) {
 					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
-				$opts = array(''=>array('value' => '', 'title' => ''))+$auths+array('Groupes' => array('group' => $groupes));
+				$opts = array(''=>array('value' => '', 'title' => ''))+$authsMethods+array('Groupes' => array('group' => $groupes));
 				
 				if (($value === NULL) && ($object->auth_group !== NULL)) {
 					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->auth_group;

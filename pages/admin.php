@@ -31,11 +31,14 @@ if ($subpage === NULL) {
 }
 $editId = (($subpage === 'groups') && $Input->G->ISSET->edit && is_numeric($Input->G->RAW->edit))?$Input->G->RAW->edit:'';
 
-$type = $Input->G->RAW->type;
-
+$type = NULL;
+if ($editId !== '') {
+	$type = $Input->G->RAW->type;
+}
 if ($type === NULL) {
 	$type = \salt\first(array_keys($SUBPAGES));
 }
+
 
 $groupable = ($SUBPAGES[$subpage]->object instanceof SsoGroupable);
 $pagination = new Pagination($Input->G->RAW->offset);
@@ -159,12 +162,17 @@ if ($Input->P->ISSET->add) {
 		
 		$modifiedObjects = array();
 		
+		$changedGroups = array();
 		
 		foreach($datas as $id => $values) {
 			if (!isset($objects[$id])) {
 				continue; // removed by another user
 			}
 			$obj = $objects[$id];
+
+			if (isset($values[SsoGroupable::GROUPS]) && $groupable) {
+				$changedGroups[$id] = array_map('intval', $values[SsoGroupable::GROUPS]);
+			}
 
 			if ($editId !== '') {
 				if (count($groups) === 0) {
@@ -201,6 +209,84 @@ if ($Input->P->ISSET->add) {
 				}
 			}
 		} // each POST data
+		
+		if (count($changedGroups) > 0) {
+			$realType = $SUBPAGES[$subpage]->object->getGroupType();
+
+			$q = new Query(SsoGroupElement::meta(), TRUE);
+			$q->whereAnd('ref_id', 'IN', array_keys($changedGroups));
+			$q->whereAnd('type', '=', $realType);
+			$existings = array();
+			foreach($DB->execQuery($q)->data as $row) {
+				if (!isset($existings[$row->ref_id])) {
+					$existings[$row->ref_id] = array();
+				}
+				$existings[$row->ref_id][] = $row->group_id;
+			}
+			
+			$insertGroups = array();
+			foreach($changedGroups as $id => $newGroups) {
+				$newGroups = array_diff($newGroups, array(-1));
+
+				if (!isset($existings[$id])) {
+					$existings[$id] = array();
+				}
+				
+				$toCreate = array_diff($newGroups, $existings[$id]);
+				$toDelete = array_diff($existings[$id], $newGroups);
+				
+				if (count($toCreate) > 0) {
+					foreach($toCreate as $group) {
+						$groupElement = new SsoGroupElement();
+						$groupElement->type = $realType;
+						$groupElement->ref_id = $id;
+						$groupElement->group_id = $group;
+						$insertGroups[] = $groupElement;
+					}
+
+					if ($SUBPAGES[$subpage]->isFemaleName()) {
+						if (count($toCreate) === 1) {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajoutée à '.count($toCreate).' groupe';
+						} else {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajoutée à '.count($toCreate).' groupes';
+						}
+					} else {
+						if (count($toCreate) === 1) {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajouté à '.count($toCreate).' groupe';
+						} else {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajouté à '.count($toCreate).' groupes';
+						}
+					}
+				}
+				
+				if (count($toDelete) > 0) {
+					$q = new DeleteQuery(SsoGroupElement::meta());
+					$q->allowMultipleChange();
+					$q->whereAnd('type', '=', $realType);
+					$q->whereAnd('ref_id', '=', $id);
+					$q->whereAnd('group_id', 'IN', $toDelete);
+					$DB->execDelete($q);
+					
+					if ($SUBPAGES[$subpage]->isFemaleName()) {
+						if (count($toDelete) === 1) {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retirée de '.count($toDelete).' groupe';
+						} else {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retirée de '.count($toDelete).' groupes';
+						}
+					} else {
+						if (count($toDelete) === 1) {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retiré de '.count($toDelete).' groupe';
+						} else {
+							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retiré de '.count($toDelete).' groupes';
+						}
+					}
+				}
+			}
+			
+			if (count($insertGroups) > 0) {
+				$DB->execInsert(new InsertQuery($insertGroups));
+			}
+		}
 		
 		if (count($groups) > 0) {
 
@@ -432,7 +518,9 @@ ViewControl::edit();
 
 <?php include(SSO_RELATIVE.'pages/layout/pagination.php'); ?>
 
-<?= FormHelper::post(NULL, array('*', 'type' => $type)) ?>
+<?php $params = array('*'); ?>
+<?php if ($editId !== '') $params+=array('type' => $type); ?>
+<?= FormHelper::post(NULL, $params) ?>
 <table class="actions">
 	<tr>
 		<td><?= FormHelper::input('save', 'submit', 'Sauvegarder')?></td>
@@ -469,6 +557,7 @@ ViewControl::edit();
 <?php 	} ?>
 <?php } ?>
 <?php if ($editId === '') {?>
+
 		<th>Actions</th>
 <?php } ?>
 	</tr>
@@ -497,6 +586,7 @@ ViewControl::edit();
 <?php 	foreach($displayFields as $col) { ?>
 		<td><?= in_array($col, $newFields)?$newObject->FORM($formContext)->$col:$newObject->VIEW->$col ?></td>
 <?php 	} ?>
+
 		<td>
 			<button name="add">Ajouter <img src="<?= SSO_WEB_RELATIVE ?>images/add.png" alt="Ajouter" title="Ajouter"/></button>
 		</td>

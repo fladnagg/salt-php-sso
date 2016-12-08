@@ -70,11 +70,14 @@ class SsoGroup extends Base implements SsoAdministrable {
 	}
 	
 	public static function getActive($type) {
-		$result = array();
-		foreach(self::search(array('types' => $type), NULL)->data as $row) {
-			$result[$row->id] = $row->name;
+		static $result = array();
+		if (!isset($result[$type])) {
+			$result[$type] = array();
+			foreach(self::search(array('types' => $type), NULL)->data as $row) {
+				$result[$type][$row->id] = $row->name;
+			}
 		}
-		return $result;
+		return $result[$type];
 	}
 	
 	public static function getAll() {
