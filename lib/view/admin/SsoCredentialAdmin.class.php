@@ -10,7 +10,7 @@ class SsoCredentialAdmin extends SsoAdmin {
 	
 	public function __construct() {
 		$this->title = 'Autorisations';
-		$this->object = SsoCredential::meta();
+		$this->object = SsoCredential::singleton();
 		$this->searchFields = array('user', 'appli', 'status');
 		$this->modifiableFields = array('user', 'appli', 'status', 'description');
 		$this->newFields = array('user', 'appli', 'status');
@@ -128,7 +128,7 @@ class SsoCredentialAdmin extends SsoAdmin {
 			}
 		}
 	
-		$q = new Query(SsoUser::meta());
+		$q = SsoUser::query();
 		$q->whereAnd('id', 'IN', $users);
 		$q->disableIfEmpty($users);
 		$q->selectFields(array('id', 'name'));
@@ -136,7 +136,7 @@ class SsoCredentialAdmin extends SsoAdmin {
 		foreach($DB->execQuery($q)->data as $row) {
 			$users[$row->id] = $row->name;
 		}
-		$q = new Query(SsoAppli::meta());
+		$q = SsoAppli::query();
 		$q->whereAnd('id', 'IN', $applis);
 		$q->disableIfEmpty($applis);
 		$q->selectFields(array('id', 'name'));

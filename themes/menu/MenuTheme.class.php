@@ -5,15 +5,15 @@ use salt\Field;
 class MenuTheme extends VisibleTheme {
 
 	protected function metadata() {
-		return array_merge(parent::metadata(), array(
+		parent::metadata();
+		self::MODEL()->registerFields(
 			Field::newText('position', 'Position d\'origine', FALSE, 'top-right', array(
 				'top-left' => 'En haut à gauche', 
 				'top-right' => 'En haut à droite', 
 				'bottom-right' => 'En bas à droite', 
 				'bottom-left' => 'En bas à gauche', 
-			)),
-				
-		));
+			))
+		);
 	}
 	
 	public function description() {

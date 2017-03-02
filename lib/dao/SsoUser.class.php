@@ -51,29 +51,30 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 	const STATE_TO_VALIDATE = 2;
 	
 	protected function metadata() {
-		parent::registerId('id');
-		parent::registerTableName('sso_user');
 		parent::registerHelper(__NAMESPACE__.'\SsoUserViewHelper');
-
-		return array(
-			Field::newText(	'id', 		'ID')->sqlType('VARCHAR(32) PRIMARY KEY')->displayOptions(array('size'=>8)),
-			Field::newText(	'name', 	'Nom')->sqlType('VARCHAR(64)')->displayOptions(array('size'=>40)),
-			Field::newText(	'password', 'Mot de passe', TRUE)->sqlType('CHAR(41)')->displayOptions(array('size'=>20, 'type' => 'password')),
-			Field::newNumber('auth', 	'Méthode d\'authentification', TRUE),
-			Field::newNumber('auth_group', 'Méthodes d\'authentification', TRUE),
-			Field::newBoolean('admin', 	'Admin', FALSE, FALSE),
-			Field::newBoolean('restrictIP', 		'Vérifier IP', FALSE, FALSE),
-			Field::newBoolean('restrictAgent', 	'Vérifier User-Agent', FALSE, TRUE),
-			Field::newNumber('timeout', 				'Durée session', FALSE, self::DEFAULT_TIMEOUT),
-			Field::newDate('last_login',				'Dernier accès', SqlDateFormat::DATETIME, 'd/m/Y H:i:s'),
-			Field::newNumber('login_count',			'Nb succès', FALSE, 1),
-			Field::newDate('last_failed_login',	'Dernier échec', SqlDateFormat::DATETIME, 'd/m/Y H:i:s', TRUE),
-			Field::newNumber('failed_login_count',	'Nb échecs', FALSE, 0),
-			Field::newNumber('state', 	'Etat', FALSE, self::STATE_DISABLED, array(
-				self::STATE_ENABLED => 'Actif',
-				self::STATE_DISABLED => 'Inactif',
-				self::STATE_TO_VALIDATE => 'En attente de validation',
-			)),
+		
+		self::MODEL()
+			->registerId('id')
+			->registerTableName('sso_user')
+			->registerFields(
+				Field::newText(	'id', 		'ID')->sqlType('VARCHAR(32) PRIMARY KEY')->displayOptions(array('size'=>8)),
+				Field::newText(	'name', 	'Nom')->sqlType('VARCHAR(64)')->displayOptions(array('size'=>40)),
+				Field::newText(	'password', 'Mot de passe', TRUE)->sqlType('CHAR(41)')->displayOptions(array('size'=>20, 'type' => 'password')),
+				Field::newNumber('auth', 	'Méthode d\'authentification', TRUE),
+				Field::newNumber('auth_group', 'Méthodes d\'authentification', TRUE),
+				Field::newBoolean('admin', 	'Admin', FALSE, FALSE),
+				Field::newBoolean('restrictIP', 		'Vérifier IP', FALSE, FALSE),
+				Field::newBoolean('restrictAgent', 	'Vérifier User-Agent', FALSE, TRUE),
+				Field::newNumber('timeout', 				'Durée session', FALSE, self::DEFAULT_TIMEOUT),
+				Field::newDate('last_login',				'Dernier accès', SqlDateFormat::DATETIME, 'd/m/Y H:i:s'),
+				Field::newNumber('login_count',			'Nb succès', FALSE, 1),
+				Field::newDate('last_failed_login',	'Dernier échec', SqlDateFormat::DATETIME, 'd/m/Y H:i:s', TRUE),
+				Field::newNumber('failed_login_count',	'Nb échecs', FALSE, 0),
+				Field::newNumber('state', 	'Etat', FALSE, self::STATE_DISABLED, array(
+					self::STATE_ENABLED => 'Actif',
+					self::STATE_DISABLED => 'Inactif',
+					self::STATE_TO_VALIDATE => 'En attente de validation',
+				))
 		);
 	}
 
@@ -88,49 +89,48 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 	public static function search(array $criteres, Pagination $pagination = NULL) {
 		$DB = DBHelper::getInstance('SSO');
 
-		$user = SsoUser::meta();
-		$q = new Query($user, TRUE);
+		$q = SsoUser::query(TRUE);
 
 		if (isset($criteres[self::WITH_DETAILS])) {
-			$gElem = new Query(SsoGroupElement::meta()); // Tout les groupes liés a l'utilisateur
+			$gElem = SsoGroupElement::query(); // Tout les groupes liés a l'utilisateur
 			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_USER);
-			$q->join($gElem, 'id', '=', $gElem->getField('ref_id'), 'LEFT OUTER');
+			$q->join($gElem, 'id', '=', $gElem->ref_id, 'LEFT OUTER');
 			
-			$creds = new Query(SsoCredential::meta()); // Toutes les autorisations liés a l'utilisateur ou l'un de ses groupes
+			$creds = SsoCredential::query(); // Toutes les autorisations liés a l'utilisateur ou l'un de ses groupes
 			$credsLink = $creds->getSubQuery();
-			$credsLink->whereOr('user', '=', $q->getField('id'));
-			$credsLink->whereOr('user_group', '=', $gElem->getField('group_id'));
-			$q->join($creds, $creds->getField('status'), '=', 2, 'LEFT OUTER');
+			$credsLink->whereOr('user', '=', $q->id);
+			$credsLink->whereOr('user_group', '=', $gElem->group_id);
+			$q->join($creds, $creds->status, '=', 2, 'LEFT OUTER');
 			$q->joinOnAndQuery($creds, $credsLink);
 			
-			$gAppli = new Query(SsoGroupElement::meta()); // Tout les groupes d'appli liés aux autorisations
+			$gAppli = SsoGroupElement::query(); // Tout les groupes d'appli liés aux autorisations
 			$gAppli->whereAnd('type', '=', SsoGroupElement::TYPE_APPLI);
-			$q->join($gAppli, $creds->getField('appli_group'), '=', $gAppli->getField('group_id'), 'LEFT OUTER');
+			$q->join($gAppli, $creds->appli_group, '=', $gAppli->group_id, 'LEFT OUTER');
 			
-			$applis = new Query(SsoAppli::meta()); // et enfin toutes les applis liés a un credential ou a un groupe d'applis !
-			$q->join($applis, $creds->getField('appli'), '=', $applis->getField('id'), 'LEFT OUTER');
-			$q->joinOnOr($applis, $gAppli->getField('ref_id'), '=', $applis->getField('id'));
+			$applis = SsoAppli::query(); // et enfin toutes les applis liés a un credential ou a un groupe d'applis !
+			$q->join($applis, $creds->appli, '=', $applis->id, 'LEFT OUTER');
+			$q->joinOnOr($applis, $gAppli->ref_id, '=', $applis->id);
 
 			// Toutes ces jointures pour calculer ce champ qui est la liste des applis sur lesquelles l'utilisateur est autorisé
-			$expr = $applis->getField('name')->distinct();
+			$expr = $applis->name->distinct();
 			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
-			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), 'auths');
+			$q->select(SqlExpr::_GROUP_CONCAT($expr), 'auths');
 			$q->select(SqlExpr::text(1), 'password2');
 			
 			
-			$qGroupElem = new Query(SsoGroup::meta()); // Nom des groupes liés a l'utilisateur
-			$q->join($qGroupElem, $gElem->getField('group_id'), '=', $qGroupElem->getField('id'), 'LEFT OUTER');
-			$expr = $qGroupElem->getField('name')->distinct();
+			$qGroupElem = SsoGroup::query(); // Nom des groupes liés a l'utilisateur
+			$q->join($qGroupElem, $gElem->group_id, '=', $qGroupElem->id, 'LEFT OUTER');
+			$expr = $qGroupElem->name->distinct();
 			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
-			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), SsoGroupable::GROUPS);
+			$q->select(SqlExpr::_GROUP_CONCAT($expr), SsoGroupable::GROUPS);
 		}
 		
 		if (isset($criteres[self::WITH_GROUP])) {
-			$qGroup = new Query(SsoGroupElement::meta());
-			$qGroup->whereAnd('type', '=', self::meta()->getGroupType());
+			$qGroup = SsoGroupElement::query();
+			$qGroup->whereAnd('type', '=', self::getGroupType());
 			$qGroup->whereAnd('group_id', '=', $criteres[self::WITH_GROUP]);
-			$q->join($qGroup, 'id', '=', $qGroup->getField('ref_id'), 'LEFT OUTER');
-			$q->select(SqlExpr::func('!ISNULL', $qGroup->getField('group_id'))->asBoolean(), self::WITH_GROUP);
+			$q->join($qGroup, 'id', '=', $qGroup->ref_id, 'LEFT OUTER');
+			$q->select(SqlExpr::_ISNULL($qGroup->group_id)->before(SqlExpr::text('!'))->asBoolean(), self::WITH_GROUP);
 			unset($criteres[self::WITH_GROUP]);
 
 			if (isset($criteres[self::EXISTS_NAME])) {
@@ -139,7 +139,7 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 					if ($criteres[self::EXISTS_NAME] == 1) {
 						$value->not();
 					}
-					$q->whereAnd($qGroup->getField('group_id'), 'IS', $value);
+					$q->whereAnd($qGroup->group_id, 'IS', $value);
 				}
 				unset($criteres[self::EXISTS_NAME]);
 			}
@@ -148,12 +148,12 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 		foreach($criteres as $k => $v) {
 			if ($v !== '') {
 				if ($k === 'group') {
-					$qGroup = new Query(SsoGroupElement::meta());
+					$qGroup = SsoGroupElement::query();
 					$qGroup->whereAnd('type', '=', SsoGroupElement::TYPE_USER);
 					$qGroup->whereAnd('group_id', '=', $v);
-					$q->join($qGroup, 'id', '=', $qGroup->getField('ref_id'));
+					$q->join($qGroup, 'id', '=', $qGroup->ref_id);
 				} else {
-					$field = $user->getField($k);
+					$field = self::MODEL()->$k;
 					if ($field->type === FieldType::TEXT) {
 						$q->whereAnd($k, 'LIKE' , '%'.$v.'%');
 					} else if ($field->type === FieldType::BOOLEAN) {
@@ -166,7 +166,7 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 		}
 
 		// with a count on a left outer field, we have to add a group by on each field
-		foreach($user->getFieldsMetadata() as $field) {
+		foreach(self::MODEL()->getFields() as $field) {
 			$q->groupBy($field->name);
 		}
 		$q->orderAsc('name');
@@ -293,11 +293,11 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 		$initUser->name = SSO_DB_USER;
 		$initUser->state = SsoUser::STATE_ENABLED;
 		
-		$q = new Query(Dual::meta());
-		$q->select(SqlExpr::func('PASSWORD', SSO_DB_PASS)->privateBinds(), 'pass');
+		$q = Dual::query();
+		$q->select(SqlExpr::_PASSWORD(SSO_DB_PASS)->privateBinds(), 'pass');
 		$initUser->password = \salt\first($DB->execQuery($q)->data)->pass;
 		
-		$q = new Query(SsoAuthMethod::meta());
+		$q = SsoAuthMethod::query();
 		$q->selectField('id');
 		$q->whereAnd('type', '=', SsoAuthMethod::TYPE_LOCAL);
 		$auth = \salt\first($DB->execQuery($q, new Pagination(0, 1))->data);

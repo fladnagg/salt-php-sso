@@ -4,11 +4,8 @@ header('Content-Type: text/html; charset='.SSO_CHARSET);
 
 use salt\DatabaseHelper;
 use salt\DBHelper;
-use salt\InsertQuery;
 use salt\FormHelper;
-use salt\Dual;
-use salt\SqlExpr;
-use salt\Query;
+use salt\InsertQuery;
 
 $errorMessage=NULL;
 

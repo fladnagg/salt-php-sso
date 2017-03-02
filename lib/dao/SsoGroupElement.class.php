@@ -18,9 +18,9 @@ class SsoGroupElement extends Base {
 	const TYPE_AUTH = 3;
 	
 	protected function metadata() {
-		parent::registerTableName('sso_group_element');
-
-		return array(
+		self::MODEL()
+			->registerTableName('sso_group_element')
+			->registerFields(
 				Field::newText(		'ref_id', 	'Ref ID')->sqlType('VARCHAR(32)'),
 				Field::newNumber(	'group_id', 'Group ID'),
 				Field::newNumber(	'type',		'Type', FALSE, self::TYPE_USER, array(
@@ -34,7 +34,7 @@ class SsoGroupElement extends Base {
 	public static function findByIds(array $ids) {
 		$db = DBHelper::getInstance('SSO');
 		
-		$q = new Query(SsoGroupElement::meta(), TRUE);
+		$q = SsoGroupElement::query(TRUE);
 		$q->whereAnd('ref_id', 'IN', $ids);
 		$q->disableIfEmpty($ids);
 		
@@ -47,9 +47,9 @@ class SsoGroupElement extends Base {
 	
 	public static function counts() {
 		$db = DBHelper::getInstance('SSO');
-		$q = new Query(SsoGroupElement::meta());
+		$q = SsoGroupElement::query();
 		$q->selectField('group_id');
-		$q->select(SqlExpr::func('COUNT', SqlExpr::text('*')), 'nb');
+		$q->select(SqlExpr::_COUNT(SqlExpr::text('*')), 'nb');
 		$q->groupBy('group_id');
 
 		$result = array();
@@ -61,7 +61,7 @@ class SsoGroupElement extends Base {
 	
 	public static function countByType($groupId, $type = NULL) {
 		$db = DBHelper::getInstance('SSO');
-		$q = new Query(SsoGroupElement::meta());
+		$q = SsoGroupElement::query();
 		$q->whereAnd('group_id', '=', $groupId);
 		if ($type !== NULL) {
 			$q->whereAnd('type', '=', $type);
@@ -76,7 +76,7 @@ class SsoGroupElement extends Base {
 	public static function getTooltipContents() {
 		$db = DBHelper::getInstance('SSO');
 		
-		$types = array_keys(SsoGroupElement::meta()->getField('type')->values);
+		$types = array_keys(self::MODEL()->type->values);
 		$tooltipContent = array_combine($types, array_fill(0, count($types), array()));
 
 // 		select g.id, el.type, count(el.ref_id) as nb
@@ -84,17 +84,17 @@ class SsoGroupElement extends Base {
 // 		left outer join sso_group_element el on el.group_id = g.id
 // 		group by g.id, el.type
 // 		;
-		$q = new Query(SsoGroup::meta());
+		$q = SsoGroup::query();
 		$q->selectField('id');
 
-		$qElem = new Query(SsoGroupElement::meta());
+		$qElem = SsoGroupElement::query();
 		$qElem->selectField('type');
-		$qElem->select(SqlExpr::func('COUNT', $qElem->getField('ref_id'))->asNumber(), 'nb');
+		$qElem->select(SqlExpr::_COUNT($qElem->ref_id)->asNumber(), 'nb');
 		
-		$q->join($qElem, 'id', '=', $qElem->getField('group_id'), 'LEFT OUTER');
+		$q->join($qElem, 'id', '=', $qElem->group_id, 'LEFT OUTER');
 		
 		$q->groupBy('id');
-		$q->groupBy($qElem->getField('type'));
+		$q->groupBy($qElem->type);
 		
 		foreach($db->execQuery($q)->data as $row) {
 			if (!isset($tooltipContent[\salt\first($types)][$row->id])) {
@@ -130,22 +130,22 @@ class SsoGroupElement extends Base {
 // 		;
 
 		foreach(array(
-					SsoGroupElement::TYPE_APPLI => SsoAppli::meta(), 
-					SsoGroupElement::TYPE_USER => SsoUser::meta(),
-					SsoGroupElement::TYPE_AUTH => SsoAuthMethod::meta(),
-				) as $type => $base) {
+					SsoGroupElement::TYPE_APPLI => SsoAppli::query(), 
+					SsoGroupElement::TYPE_USER => SsoUser::query(),
+					SsoGroupElement::TYPE_AUTH => SsoAuthMethod::query(),
+				) as $type => $query) {
 
-			$q = new Query(SsoGroupElement::meta());
+			$q = SsoGroupElement::query();
 			$q->whereAnd('type', '=', $type);
 			
-			$qElem = new Query($base);
-			$q->join($qElem, 'ref_id', '=', $qElem->getField('id'));
+			$qElem = $query;
+			$q->join($qElem, 'ref_id', '=', $qElem->id);
 			
 			$q->selectField('group_id');
-			$q->select($qElem->getField('name'), 'name');
+			$q->select($qElem->name, 'name');
 			
 			$q->orderAsc('group_id');
-			$q->orderAsc($qElem->getField('name'));
+			$q->orderAsc($qElem->name);
 			
 			$limit = SqlExpr::value(SSO_MAX_TOOLTIP_ELEMENTS+1);
 			$sql = <<<SQL
@@ -176,7 +176,7 @@ SQL;
 	}
 	
 	public static function getTypeText($type) {
-		return self::meta()->getField('type')->values[$type];
+		return self::MODEL()->type->values[$type];
 	}
 }
 

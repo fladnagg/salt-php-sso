@@ -33,7 +33,7 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 		
 		if (!SsoProfil::isInternalTheme($themeId)) {
 			// retrieve or create current profile
-			$q = new Query(SsoProfil::meta(), TRUE);
+			$q = SsoProfil::query(TRUE);
 			if ($Input->P->ISSET->save_recommended) {
 				$q->whereAnd('userId', 'IS', NULL);
 			} else {
@@ -69,7 +69,7 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 
 		// disable all
 		if (!$Input->P->ISSET->save_recommended) {
-			$disabledQuery = new UpdateQuery(SsoProfil::meta());
+			$disabledQuery = SsoProfil::updateQuery();
 			$disabledQuery->allowMultipleChange();
 			$disabledQuery->whereAnd('userId', '=', $sso->getLogin());
 			$disabledQuery->whereAnd('appliId', '=', $appli);
@@ -162,7 +162,7 @@ if ($Input->P->ISSET->preview) {
 // load real themes
 $profile = NULL;
 if (!SsoProfil::isInternalTheme($currentTheme) || ($currentTheme === NULL)) {
-	$q = new Query(SsoProfil::meta(), TRUE);
+	$q = SsoProfil::query(TRUE);
 	if ($Input->P->ISSET->load_recommended) {
 		$q->whereAnd('userId', 'IS', SqlExpr::value(NULL));
 	} else {

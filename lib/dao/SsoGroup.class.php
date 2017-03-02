@@ -18,21 +18,23 @@ use salt\FieldType;
 class SsoGroup extends Base implements SsoAdministrable {
 	
 	protected function metadata() {
-		parent::registerId('id');
-		parent::registerTableName('sso_group');
+		
 		parent::registerHelper(__NAMESPACE__.'\SsoGroupViewHelper');
-
-		return array(
+		
+		self::MODEL()
+			->registerId('id')
+			->registerTableName('sso_group')
+			->registerFields(
 				Field::newNumber(	'id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
 				Field::newText(		'name', 	'Nom')->sqlType('VARCHAR(64) UNIQUE'),
 				Field::newNumber(	'defaults', 'Par défaut')->sqlType('BIGINT'),
-				Field::newNumber(	'types', 	'Types')->sqlType('BIGINT'),
+				Field::newNumber(	'types', 	'Types')->sqlType('BIGINT')
 		);
 	}
 	
 	public static function search(array $criteres, Pagination $pagination = NULL) {
 		$DB = DBHelper::getInstance('SSO');
-		$q = new Query(SsoGroup::meta(), TRUE);
+		$q = SsoGroup::query(TRUE);
 
 		foreach($criteres as $k => $v) {
 			if ($v !== '') {
@@ -41,7 +43,7 @@ class SsoGroup extends Base implements SsoAdministrable {
 				} else if ($k === 'edit') {
 					$q->whereAnd('id', '=', $v);
 				} else {
-					$field = $q->getField($k);
+					$field = $q->$k;
 					if ($field->getType() === FieldType::TEXT) {
 						$q->whereAnd($k, 'LIKE' , '%'.$v.'%');
 					}
@@ -57,8 +59,9 @@ class SsoGroup extends Base implements SsoAdministrable {
 			);
 			
 			foreach($types as $name => $type) {
-				$q->select($q->getField('types')->template(SqlExpr::TEMPLATE_MAIN.' & '.SqlExpr::TEMPLATE_PARAM, pow(2, $type-1)), 'type_'.$name);
-				$q->select($q->getField('defaults')->template(SqlExpr::TEMPLATE_MAIN.' & '.SqlExpr::TEMPLATE_PARAM, pow(2, $type-1)), 'default_'.$name);
+				
+				$q->select(SqlExpr::implode(' & ', $q->types, pow(2, $type-1)), 'type_'.$name);
+				$q->select(SqlExpr::implode(' & ', $q->defaults, pow(2, $type-1)), 'default_'.$name);
 				$q->select(SqlExpr::text(1), $name); // extra fields for display
 			}
 		}
@@ -98,7 +101,7 @@ class SsoGroup extends Base implements SsoAdministrable {
 		if (!isset($allDefaults[$type])) {
 			$DB = DBHelper::getInstance('SSO');
 			
-			$q = new Query(SsoGroup::meta());
+			$q = SsoGroup::query();
 			$q->selectField('id');
 			$q->whereAnd('defaults', '&', pow(2, $type-1));
 			$q->whereAnd('types', '&', pow(2, $type-1));

@@ -14,7 +14,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 			return parent::column($field, $format).'&nbsp;'.
 				'<img src="'.SSO_WEB_RELATIVE.'images/help.png" class="aide" alt="aide" '.
 					'title="Le mot de passe n\'est nécessaire que pour le type d\'authentification &quot;'.
-					SsoAuthMethod::meta()->getField('type')->values[SsoAuthMethod::TYPE_LOCAL].'&quot;"/>';
+					SsoAuthMethod::MODEL()->type->values[SsoAuthMethod::TYPE_LOCAL].'&quot;"/>';
 		} else if ($field->name === 'password2') {
 			return $Input->HTML('Confirmer le mot de passe');
 		} else {

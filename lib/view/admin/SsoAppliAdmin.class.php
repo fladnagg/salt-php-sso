@@ -8,7 +8,7 @@ class SsoAppliAdmin extends SsoAdmin {
 	
 	public function __construct() {
 		$this->title = 'Applications';
-		$this->object = SsoAppli::meta();
+		$this->object = SsoAppli::singleton();
 		$this->searchFields = array('path', 'name');
 		$this->modifiableFields = array('path', 'name', 'handler', 'icon', 'groups');
 		$this->extraFields = array('groups');
@@ -52,12 +52,12 @@ class SsoAppliAdmin extends SsoAdmin {
 		
 		$result = array();
 		
-		$q = new DeleteQuery(SsoCredential::meta());
+		$q = SsoCredential::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('appli', '=', $obj->id);
 		$result[] = $q;
 		
-		$q = new DeleteQuery(SsoGroupElement::meta());
+		$q = SsoGroupElement::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('ref_id', '=', $obj->id);
 		$q->whereAnd('type', '=', SsoGroupElement::TYPE_APPLI);

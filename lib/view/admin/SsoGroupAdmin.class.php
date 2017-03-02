@@ -1,7 +1,7 @@
 <?php namespace sso;
 
-use salt\DBHelper;
 use salt\Base;
+use salt\DBHelper;
 use salt\DBResult;
 use salt\DeleteQuery;
 use salt\InsertQuery;
@@ -18,7 +18,7 @@ class SsoGroupAdmin extends SsoAdmin {
 
 	public function __construct() {
 		$this->title = 'Groupes';
-		$this->object = SsoGroup::meta();
+		$this->object = SsoGroup::singleton();
 		$this->searchFields = array('name', 'types');
 		$this->modifiableFields = array('name');
 		$this->newFields = array('name');
@@ -71,12 +71,12 @@ class SsoGroupAdmin extends SsoAdmin {
 		
 		$result = array();
 	
-		$q = new DeleteQuery(SsoGroupElement::meta());
+		$q = SsoGroupElement::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('group_id', '=', $obj->id);
 		$result[] = $q;
 		
-		$q = new Query(SsoCredential::meta());
+		$q = SsoCredential::query();
 		$q->whereOr('appli_group', '=', $obj->id);
 		$q->whereOr('user_group', '=', $obj->id);
 
@@ -107,12 +107,12 @@ class SsoGroupAdmin extends SsoAdmin {
 		$removedTypes = $obj->types & ~$types; // old AND NOT new : all 1 bits in old but missing in new
 		
 		if ($removedTypes > 0) {
-			$q = new Query(SsoGroupElement::meta());
+			$q = SsoGroupElement::query();
 			$q->whereAnd('group_id', '=', $obj->id);
 			
 			//(pow(2, t1.type-1) & 5)
 			
-			$expr = SqlExpr::func('POW', 2, $q->getField('type')->after(SqlExpr::text(' - 1')));
+			$expr = SqlExpr::_POW(2, $q->type->after(SqlExpr::text(' - 1')));
 			
 			$q->whereAnd($expr, '&', $removedTypes);
 			
@@ -121,7 +121,7 @@ class SsoGroupAdmin extends SsoAdmin {
 			if ($nb > 0) {
 				$bin = strrev(decbin($removedTypes));
 				$types = array();
-				$values = SsoGroupElement::meta()->getField('type')->values;
+				$values = SsoGroupElement::MODEL()->type->values;
 				for($i = 0; $i < strlen($bin); $i++) {
 					if ($bin[$i] === '1') {
 						$types[] = $values[$i+1];
@@ -146,7 +146,7 @@ class SsoGroupAdmin extends SsoAdmin {
 	
 		$deletedGroups = array_intersect($deleteIds, $existingIds);
 		if (count($deletedGroups) > 0) {
-			$q = new DeleteQuery(SsoGroupElement::meta());
+			$q = SsoGroupElement::deleteQuery();
 			$q->allowMultipleChange();
 			$q->whereAnd('group_id', '=', $template->group_id);
 			$q->whereAnd('type', '=', $template->type);

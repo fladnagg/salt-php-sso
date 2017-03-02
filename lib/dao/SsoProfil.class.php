@@ -28,17 +28,18 @@ class SsoProfil extends Base {
 	public $path = NULL; // not persisted
 	
 	protected function metadata() {
-		parent::registerId('id');
-		parent::registerTableName('sso_profile');
 		parent::registerHelper(__NAMESPACE__.'\SsoProfilViewHelper');
 
-		return array(
+		self::MODEL()
+			->registerId('id')
+			->registerTableName('sso_profile')
+			->registerFields(
 				Field::newNumber('id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
 				Field::newText(	'userId', 	'User', TRUE)->sqlType('VARCHAR(32)'),
 				Field::newNumber('appliId', 'Application'),
 				Field::newText(	'theme',	'Thème')->sqlType('VARCHAR(32)'),
 				Field::newBoolean('enabled','Actif'),
-				Field::newText(	'options',	'Options', FALSE)->sqlType('TEXT'),
+				Field::newText(	'options',	'Options', FALSE)->sqlType('TEXT')
 		);
 	}
 	
@@ -60,16 +61,16 @@ class SsoProfil extends Base {
 	public static function initProfiles(Sso $sso) {
 		$profiles = array();
 		
-		$q = new Query(SsoProfil::meta(), TRUE);
+		$q = SsoProfil::query(TRUE);
 		$q->whereAnd('enabled', '=', TRUE);
 		$qUser = $q->getSubQuery();
 		$qUser->whereOr('userId', '=', $sso->getLogin());
 		$qUser->whereOr('userId', 'IS', NULL);
 		$q->whereAndQuery($qUser);
 
-		$qAppli = new Query(SsoAppli::meta());
+		$qAppli = SsoAppli::query();
 		$qAppli->selectField('path');
-		$q->join($qAppli, 'appliId', '=', $qAppli->getField('id'));
+		$q->join($qAppli, 'appliId', '=', $qAppli->id);
 		
 		$q->orderDesc('userId'); // NULL user at end : recommended profile
 		
@@ -172,7 +173,7 @@ class SsoProfil extends Base {
 	public static function getInternalProfile(SsoClient $sso, $appli, $theme) {
 		if (self::isInternalTheme($theme)) {
 
-			$q = new Query(SsoProfil::meta(), TRUE);
+			$q = SsoProfil::query(TRUE);
 			$q->whereAnd('enabled', '=', TRUE);
 			if ($theme === self::RECOMMENDED_PROFILE) {
 				$q->whereAnd('userId', 'IS', SqlExpr::value(NULL));
@@ -181,9 +182,9 @@ class SsoProfil extends Base {
 			}
 			$q->whereAnd('appliId', '=', $appli);
 
-			$qAppli = new Query(SsoAppli::meta());
+			$qAppli = SsoAppli::query();
 			$qAppli->selectField('path');
-			$q->join($qAppli, 'appliId', '=', $qAppli->getField('id'));
+			$q->join($qAppli, 'appliId', '=', $qAppli->id);
 
 			$DB = DBHelper::getInstance('SSO');
 			$profile = \salt\first($DB->execQuery($q)->data);

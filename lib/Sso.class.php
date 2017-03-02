@@ -42,17 +42,17 @@ class Sso extends SsoClient {
 			}
 			$auths = array();
 			if ($ssoUser !== NULL) {
-				$q = new Query(SsoAuthMethod::meta(), TRUE);
-				$qElem = new Query(SsoGroupElement::meta());
+				$q = SsoAuthMethod::query(TRUE);
+				$qElem = SsoGroupElement::query();
 				$qElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
 				$qElem->whereAnd('group_id', '=', $ssoUser->auth_group); // avoid distinct select
-				$q->join($qElem, 'id', '=', $qElem->getField('ref_id'), 'LEFT OUTER');
-				$q->whereOr($qElem->getField('group_id'), '=', $ssoUser->auth_group); 	// by auth_group
-				$q->whereOr('id', '=', $ssoUser->auth);									// or by auth
+				$q->join($qElem, 'id', '=', $qElem->ref_id, 'LEFT OUTER');
+				$q->whereOr($qElem->group_id, '=', $ssoUser->auth_group); 	// by auth_group
+				$q->whereOr('id', '=', $ssoUser->auth);						// or by auth
 				$q->orderAsc('name');
 				$auths = $DB->execQuery($q)->data;
 			} else {
-				$q = new Query(SsoAuthMethod::meta(), TRUE);
+				$q = SsoAuthMethod::query(TRUE);
 				$q->whereAnd('default', '=', TRUE);
 				$q->orderAsc('name');
 				$auths = $DB->execQuery($q)->data;
@@ -149,9 +149,9 @@ class Sso extends SsoClient {
 				$authUser = $local->auth($user, $password);
 		
 			} else if (!$authUser->isLogged()) { // password have been modified : update to config password
-				$q = new UpdateQuery(SsoUser::meta());
+				$q = SsoUser::updateQuery();
 				$q->whereAnd('id', '=', SSO_DB_USER);
-				$q->set('password', SqlExpr::func('PASSWORD', SSO_DB_PASS)->privateBinds());
+				$q->set('password', SqlExpr::_PASSWORD(SSO_DB_PASS)->privateBinds());
 				$q->set('admin', TRUE);
 				$q->set('timeout', SsoUser::DEFAULT_TIMEOUT);
 

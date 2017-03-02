@@ -2,7 +2,6 @@
 
 use salt\DeleteQuery;
 use salt\Field;
-use salt\FieldType;
 use salt\FormHelper;
 use salt\InsertQuery;
 use salt\Pagination;
@@ -213,7 +212,7 @@ if ($Input->P->ISSET->add) {
 		if (count($changedGroups) > 0) {
 			$realType = $SUBPAGES[$subpage]->object->getGroupType();
 
-			$q = new Query(SsoGroupElement::meta(), TRUE);
+			$q = SsoGroupElement::query(TRUE);
 			$q->whereAnd('ref_id', 'IN', array_keys($changedGroups));
 			$q->whereAnd('type', '=', $realType);
 			$existings = array();
@@ -260,7 +259,7 @@ if ($Input->P->ISSET->add) {
 				}
 				
 				if (count($toDelete) > 0) {
-					$q = new DeleteQuery(SsoGroupElement::meta());
+					$q = SsoGroupElement::deleteQuery();
 					$q->allowMultipleChange();
 					$q->whereAnd('type', '=', $realType);
 					$q->whereAnd('ref_id', '=', $id);
@@ -292,7 +291,7 @@ if ($Input->P->ISSET->add) {
 
 			$realType = $SUBPAGES[$type]->object->getGroupType();
 			
-			$q = new Query(SsoGroupElement::meta(), TRUE);
+			$q = SsoGroupElement::query(TRUE);
 			$q->whereAnd('group_id', '=', $editId);
 			$q->whereAnd('type', '=', $realType);
 			$r = $DB->execQuery($q);
@@ -500,7 +499,7 @@ ViewControl::edit();
 <?php 			if ($groupable) {?>
 			<td class="legend">Groupe :</td>
 			<td>
-				<?= SsoGroup::meta()->FORM('list-'.$SUBPAGES[$subpage]->object->getGroupType())->name ?>
+				<?= SsoGroup::singleton()->FORM('list-'.$SUBPAGES[$subpage]->object->getGroupType())->name ?>
 			</td>
 <?php 			} else if ($editId !== '') {?>
 			<td class="legend">Appartient au groupe :</td>

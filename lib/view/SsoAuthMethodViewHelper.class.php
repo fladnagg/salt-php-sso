@@ -40,7 +40,7 @@ class SsoAuthMethodViewHelper extends SsoGroupableViewHelper {
 		
 		switch($field->name) {
 			case 'type' :
-				$options = $object->getField($field->name)->values;
+				$options = $field->values;
 				unset($options[SsoAuthMethod::TYPE_LOCAL]);
 				if ($format === 'search') {
 					$options = array('' => '')+$options;

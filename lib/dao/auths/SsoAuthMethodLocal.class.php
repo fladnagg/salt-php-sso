@@ -21,10 +21,9 @@ class SsoAuthMethodLocal implements SsoAuthMethodInterface {
 		if ($ssoUser !== NULL) {
 			$authUser = new AuthUser($ssoUser->id, $ssoUser->name, array());
 
-			$q = new Query(SsoUser::meta());
+			$q = SsoUser::query();
 			$q->whereAnd('id', '=', $user);
-
-			$q->whereAnd('password', '=', SqlExpr::func('PASSWORD', $pass)->privateBinds());
+			$q->whereAnd('password', '=', SqlExpr::_PASSWORD($pass)->privateBinds());
 
 			$nb = $db->execCountQuery($q);
 

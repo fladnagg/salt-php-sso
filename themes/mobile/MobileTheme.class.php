@@ -5,14 +5,14 @@ use salt\Field;
 class MobileTheme extends VisibleTheme {
 
 	protected function metadata() {
-		
-		return array_merge(parent::metadata(), array(
+		parent::metadata();
+		self::MODEL()->registerFields(
 			Field::newText('position', 'Position', FALSE, 'right', array(
 				'right' => 'A droite', 
 				'left' => 'A gauche', 
 			)),
-			Field::newNumber('offset', 'Décalage (pixels)', FALSE, 10),
-		));
+			Field::newNumber('offset', 'Décalage (pixels)', FALSE, 10)
+		);
 	}
 	
 	public function description() {

@@ -9,7 +9,7 @@ class SsoAuthMethodAdmin extends SsoAdmin {
 	
 	public function __construct() {
 		$this->title = 'Méthodes d\'authentification';
-		$this->object = SsoAuthMethod::meta();
+		$this->object = SsoAuthMethod::singleton();
 		$this->searchFields = array('name', 'type');
 		$this->modifiableFields = array('name', 'default', 'create', 'options', 'groups');
 		$this->extraFields = array('groups');
@@ -30,7 +30,7 @@ class SsoAuthMethodAdmin extends SsoAdmin {
 		if ($obj->type === SsoAuthMethod::TYPE_LOCAL) {
 			$this->addError('Impossible de supprimer la méthode d\'authentification locale');
 		}
-		$q = new Query(SsoUser::meta());
+		$q = SsoUser::query();
 		$q->whereAnd('auth', '=', $obj->id);
 		
 		global $DB;
@@ -41,7 +41,7 @@ class SsoAuthMethodAdmin extends SsoAdmin {
 
 		$result = array();
 		
-		$q = new DeleteQuery(SsoGroupElement::meta());
+		$q = SsoGroupElement::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('ref_id', '=', $obj->id);
 		$q->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);

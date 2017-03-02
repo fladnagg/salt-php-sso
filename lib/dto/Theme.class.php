@@ -6,10 +6,10 @@ use salt\Field;
 abstract class Theme extends Base {
 
 	protected function metadata() {
-		parent::registerTableName(''); // not for persistence as a table
-	
-		return array(
-				Field::newText('id', 'ID'),
+		self::MODEL()
+			->registerTableName('') // not for persistence as a table
+			->registerFields(
+				Field::newText('id', 'ID')
 		);
 	}
 	
@@ -45,7 +45,7 @@ abstract class Theme extends Base {
 	
 	public static function set(SsoProfil $profil, Theme $theme) {
 		$options = array();
-		foreach($theme->getFieldsMetadata() as $fieldName => $meta) {
+		foreach($theme->MODEL()->getFields() as $fieldName => $_) {
 			if ($fieldName !== 'id') {
 				$options[$fieldName] = $theme->$fieldName;
 			}
@@ -77,7 +77,7 @@ abstract class Theme extends Base {
 	
 	public function getOptions() {
 		$options = array();
-		foreach(parent::getFieldsMetadata() as $field => $meta) {
+		foreach(parent::MODEL()->getFields() as $field => $_) {
 			if ($field !== 'id') {
 				$options[$field] = $this->$field;
 			}

@@ -5,9 +5,10 @@ use salt\Field;
 class TopbarTheme extends VisibleTheme {
 
 	protected function metadata() {
-		return array_merge(parent::metadata(), array(
-				Field::newText('bgcolor', 'Couleur de fond', FALSE, 'black'),
-		));
+		parent::metadata();
+		self::MODEL()->registerFields(
+			Field::newText('bgcolor', 'Couleur de fond', FALSE, 'black')
+		);
 	}
 
 	public function description() {

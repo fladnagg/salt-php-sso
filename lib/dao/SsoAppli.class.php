@@ -21,24 +21,26 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 	private $lastError = NULL;
 	
 	protected function metadata() {
-		parent::registerId('id');
-		parent::registerTableName('sso_appli');
+		
 		parent::registerHelper(__NAMESPACE__.'\SsoAppliViewHelper');
-
-		return array(
+		
+		self::MODEL()
+			->registerId('id')
+			->registerTableName('sso_appli')
+			->registerFields(
 				Field::newNumber(	'id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
 				Field::newText(		'path', 	'Chemin')->sqlType('VARCHAR(64) UNIQUE'),
 				Field::newText(		'name', 	'Nom')->sqlType('VARCHAR(64)'),
 				Field::newText(		'handler', 	'Gestionnaire')->sqlType('VARCHAR(128)')
 															->displayOptions(array('size'=>32)),
 				Field::newText(		'icon', 	'Image (64x64)')->sqlType('VARCHAR(128)')
-															->displayOptions(array('size'=>32)),
+															->displayOptions(array('size'=>32))
 		);
 	}
 
 	public static function getByPath(array $paths) {
 		$DB = DBHelper::getInstance('SSO');
-		$q = new Query(SsoAppli::meta(), TRUE);
+		$q = SsoAppli::query(TRUE);
 		$q->whereAnd('path', 'IN', $paths);
 		$q->orderAsc('name');
 		$q->disableIfEmpty($paths);
@@ -55,15 +57,14 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 
 	public static function search(array $criteres, Pagination $pagination = NULL) {
 		$DB = DBHelper::getInstance('SSO');
-		$appli = SsoAppli::meta();
-		$q = new Query($appli, TRUE);
+		$q = SsoAppli::query(TRUE);
 
 		if (isset($criteres[self::WITH_GROUP])) {
-			$qGroup = new Query(SsoGroupElement::meta());
-			$qGroup->whereAnd('type', '=', self::meta()->getGroupType());
+			$qGroup = SsoGroupElement::query();
+			$qGroup->whereAnd('type', '=', self::getGroupType());
 			$qGroup->whereAnd('group_id', '=', $criteres[self::WITH_GROUP]);
-			$q->join($qGroup, 'id', '=', $qGroup->getField('ref_id'), 'LEFT OUTER');
-			$q->select(SqlExpr::func('!ISNULL', $qGroup->getField('group_id'))->asBoolean(), self::WITH_GROUP);
+			$q->join($qGroup, 'id', '=', $qGroup->ref_id, 'LEFT OUTER');
+			$q->select(SqlExpr::_ISNULL($qGroup->group_id)->before(SqlExpr::text('!'))->asBoolean(), self::WITH_GROUP);
 			unset($criteres[self::WITH_GROUP]);
 			
 			if (isset($criteres[self::EXISTS_NAME])) {
@@ -72,7 +73,7 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 					if ($criteres[self::EXISTS_NAME] == 1) {
 						$value->not();
 					}
-					$q->whereAnd($qGroup->getField('group_id'), 'IS', $value);
+					$q->whereAnd($qGroup->group_id, 'IS', $value);
 				}
 				unset($criteres[self::EXISTS_NAME]);
 			}
@@ -82,31 +83,31 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 				$q->groupBy($select);
 			}
 			
-			$gElem = new Query(SsoGroupElement::meta()); // Tout les groupes liés a l'application
+			$gElem = SsoGroupElement::query(); // Tout les groupes liés a l'application
 			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_APPLI);
-			$q->join($gElem, 'id', '=', $gElem->getField('ref_id'), 'LEFT OUTER');
+			$q->join($gElem, 'id', '=', $gElem->ref_id, 'LEFT OUTER');
 			
-			$qGroupElem = new Query(SsoGroup::meta()); // Nom des groupes liés a l'utilisateur
-			$q->join($qGroupElem, $gElem->getField('group_id'), '=', $qGroupElem->getField('id'), 'LEFT OUTER');
-			$expr = $qGroupElem->getField('name')->distinct();
+			$qGroupElem = SsoGroup::query(); // Nom des groupes liés a l'utilisateur
+			$q->join($qGroupElem, $gElem->group_id, '=', $qGroupElem->id, 'LEFT OUTER');
+			$expr = $qGroupElem->name->distinct();
 			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
-			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), SsoGroupable::GROUPS);
+			$q->select(SqlExpr::_GROUP_CONCAT($expr), SsoGroupable::GROUPS);
 			
 		}
 		
 		foreach($criteres as $k => $v) {
 			if ($v !== '') {
 				if ($k === 'group') {
-					$qGroup = new Query(SsoGroupElement::meta());
+					$qGroup = SsoGroupElement::query();
 					$qGroup->whereAnd('type', '=', SsoGroupElement::TYPE_APPLI);
 					$qGroup->whereAnd('group_id', '=', $v);
-					$q->join($qGroup, 'id', '=', $qGroup->getField('ref_id'));
+					$q->join($qGroup, 'id', '=', $qGroup->ref_id);
 				} else if ($k === 'except') {
 					if (count($v) > 0) {
 						$q->whereAnd('id', 'NOT IN', $v);
 					}
 				} else {
-					$field = $appli->getField($k);
+					$field = self::MODEL()->$k;
 					if ($field->type === FieldType::TEXT) {
 						$q->whereAnd($k, 'LIKE' , '%'.$v.'%');
 					} else if ($field->type === FieldType::BOOLEAN) {
@@ -118,9 +119,9 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 							$q->whereAnd($k, '=', $v);
 						}
 					}
-				}
-			}
-		}
+				} // criteria is basic field of object
+			} // value not empty
+		} // each criteria
 		$q->orderAsc('name');
 
 		return $DB->execQuery($q , $pagination);

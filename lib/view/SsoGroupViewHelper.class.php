@@ -123,7 +123,7 @@ class SsoGroupViewHelper extends BaseViewHelper {
 			
 			case 'types' :
 				
-				$options = SsoGroupElement::meta()->getField('type')->values;
+				$options = SsoGroupElement::MODEL()->type->values;
 				if ($format === 'search') {
 					$options = array('' => '')+$options;
 				}

@@ -37,7 +37,7 @@ if ($Input->P->ISSET->action) {
 			$oks[] = 'Demande ajoutée';
 		}
 	} else if ($action !== NULL) {
-		$cred = SsoCredential::meta()->getById($DB, $id);
+		$cred = SsoCredential::getById($DB, $id);
 		if ($cred === NULL) {
 			$errors[] = 'Impossible de retrouver la demande à modifier';
 		} else if ($cred->user !== $sso->getLogin()) {

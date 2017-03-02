@@ -12,7 +12,7 @@ class SsoUserAdmin extends SsoAdmin {
 	
 	public function __construct() {
 		$this->title = 'Utilisateurs';
-		$this->object = SsoUser::meta();
+		$this->object = SsoUser::singleton();
 		$this->searchFields = array('id', 'name', 'admin', 'state');
 		$this->modifiableFields = array('name', 'auth', 'password', 'password2', 'state', 'admin', 'restrictIP', 'restrictAgent', 'timeout', 'groups');
 		$this->newFields = array('id', 'name', 'auth', 'password', 'password2', 'state', 'admin');
@@ -59,13 +59,13 @@ class SsoUserAdmin extends SsoAdmin {
 		
 		$result = array();
 		
-		$q = new DeleteQuery(SsoGroupElement::meta());
+		$q = SsoGroupElement::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('ref_id', '=', $obj->id);
 		$q->whereAnd('type', '=', SsoGroupElement::TYPE_USER);
 		$result[] = $q;
 
-		$q = new DeleteQuery(SsoCredential::meta());
+		$q = SsoCredential::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('user', '=', $obj->id);
 		$result[] = $q;
@@ -113,9 +113,9 @@ class SsoUserAdmin extends SsoAdmin {
 			}
 			
 			global $DB;
-			$q = new Query(Dual::meta());
+			$q = Dual::query();
 
-			$q->select(SqlExpr::func('PASSWORD', $data['password'])->privateBinds(), 'pass');
+			$q->select(SqlExpr::_PASSWORD($data['password'])->privateBinds(), 'pass');
 			$obj->password = \salt\first($DB->execQuery($q)->data)->pass;
 		} else if (($data['password'] === '') && ($obj->password !== '')) { // password removed
 			

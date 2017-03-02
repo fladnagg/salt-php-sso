@@ -26,30 +26,32 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 	private static $TYPES=array();
 	
 	protected function metadata() {
-		parent::registerId('id');
-		parent::registerTableName('sso_auth_method');
 		parent::registerHelper(__NAMESPACE__.'\SsoAuthMethodViewHelper');
-
+		
 		self::$TYPES = array(
-			self::TYPE_DB => new SsoAuthMethodDatabase(),
-			self::TYPE_LDAP => new SsoAuthMethodLdap(),
-			self::TYPE_LOCAL => new SsoAuthMethodLocal(),
-			self::TYPE_CLASS => new SsoAuthMethodClass(),
+				self::TYPE_DB => new SsoAuthMethodDatabase(),
+				self::TYPE_LDAP => new SsoAuthMethodLdap(),
+				self::TYPE_LOCAL => new SsoAuthMethodLocal(),
+				self::TYPE_CLASS => new SsoAuthMethodClass(),
 		);
 		
-		return array(
-			Field::newText(	'id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
-			Field::newText(	'name', 	'Nom')->sqlType('VARCHAR(64) UNIQUE'),
-			Field::newBoolean('default', 'Par défault', FALSE, FALSE),
-			Field::newBoolean('create', 'Création à la volée', FALSE, FALSE),
-			Field::newNumber('type', 	'Type', FALSE, self::TYPE_LDAP, array(
-				self::TYPE_LOCAL => 'Local',
-				self::TYPE_LDAP => 'LDAP',
-				self::TYPE_DB => 'Base de données',
-				self::TYPE_CLASS => 'Classe',
-			)),
-			Field::newText('options', 'Paramètres', TRUE)->sqlType('TEXT'),
-		);
+		self::MODEL()
+			->registerId('id')
+			->registerTableName('sso_auth_method')
+			->registerFields(
+				Field::newText(	'id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
+				Field::newText(	'name', 	'Nom')->sqlType('VARCHAR(64) UNIQUE'),
+				Field::newBoolean('default', 'Par défault', FALSE, FALSE),
+				Field::newBoolean('create', 'Création à la volée', FALSE, FALSE),
+				Field::newNumber('type', 	'Type', FALSE, self::TYPE_LDAP, array(
+						self::TYPE_LOCAL => 'Local',
+						self::TYPE_LDAP => 'LDAP',
+						self::TYPE_DB => 'Base de données',
+						self::TYPE_CLASS => 'Classe',
+				)),
+				Field::newText('options', 'Paramètres', TRUE)->sqlType('TEXT')
+			)
+		;
 	}
 
 	public function getOptions($value = NULL) {
@@ -85,15 +87,14 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 	public static function search(array $criteres, Pagination $pagination = NULL) {
 		$DB = DBHelper::getInstance('SSO');
 
-		$auth = SsoAuthMethod::meta();
-		$q = new Query($auth, TRUE);
+		$q = SsoAuthMethod::query(TRUE);
 
 		if (isset($criteres[self::WITH_GROUP])) {
-			$qGroup = new Query(SsoGroupElement::meta());
-			$qGroup->whereAnd('type', '=', self::meta()->getGroupType());
+			$qGroup = SsoGroupElement::query();
+			$qGroup->whereAnd('type', '=', self::getGroupType());
 			$qGroup->whereAnd('group_id', '=', $criteres[self::WITH_GROUP]);
-			$q->join($qGroup, 'id', '=', $qGroup->getField('ref_id'), 'LEFT OUTER');
-			$q->select(SqlExpr::func('!ISNULL', $qGroup->getField('group_id'))->asBoolean(), self::WITH_GROUP);
+			$q->join($qGroup, 'id', '=', $qGroup->ref_id, 'LEFT OUTER');
+			$q->select(SqlExpr::_ISNULL($qGroup->group_id)->before(SqlExpr::text('!'))->asBoolean(), self::WITH_GROUP);
 			unset($criteres[self::WITH_GROUP]);
 
 			if (isset($criteres[self::EXISTS_NAME])) {
@@ -102,7 +103,7 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 					if ($criteres[self::EXISTS_NAME] == 1) {
 						$value->not();
 					}
-					$q->whereAnd($qGroup->getField('group_id'), 'IS', $value);
+					$q->whereAnd($qGroup->group_id, 'IS', $value);
 				}
 				unset($criteres[self::EXISTS_NAME]);
 			}
@@ -112,34 +113,34 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 				$q->groupBy($select);
 			}
 				
-			$gElem = new Query(SsoGroupElement::meta()); // Tout les groupes liés a l'application
+			$gElem = SsoGroupElement::query(); // Tout les groupes liés a l'application
 			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
-			$q->join($gElem, 'id', '=', $gElem->getField('ref_id'), 'LEFT OUTER');
+			$q->join($gElem, 'id', '=', $gElem->ref_id, 'LEFT OUTER');
 				
-			$qGroupElem = new Query(SsoGroup::meta()); // Nom des groupes liés a l'utilisateur
-			$q->join($qGroupElem, $gElem->getField('group_id'), '=', $qGroupElem->getField('id'), 'LEFT OUTER');
-			$expr = $qGroupElem->getField('name')->distinct();
+			$qGroupElem = SsoGroup::query(); // Nom des groupes liés a l'utilisateur
+			$q->join($qGroupElem, $gElem->group_id, '=', $qGroupElem->id, 'LEFT OUTER');
+			$expr = $qGroupElem->name->distinct();
 			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
-			$q->select(SqlExpr::func('GROUP_CONCAT', $expr), SsoGroupable::GROUPS);
+			$q->select(SqlExpr::_GROUP_CONCAT($expr), SsoGroupable::GROUPS);
 		}
 
 		foreach($criteres as $k => $v) {
 			if ($v !== '') {
 				if ($k === 'group') {
-					$qGroup = new Query(SsoGroupElement::meta());
+					$qGroup = SsoGroupElement::query();
 					$qGroup->whereAnd('type', '=', self::getGroupType());
 					$qGroup->whereAnd('group_id', '=', $v);
-					$q->join($qGroup, 'id', '=', $qGroup->getField('ref_id'));
+					$q->join($qGroup, 'id', '=', $qGroup->ref_id);
 				} else {
-					$field = self::meta()->getField($k);
+					$field = self::MODEL()->$k;
 					if ($field->type === FieldType::TEXT) {
 						$q->whereAnd($k, 'LIKE' , '%'.$v.'%');
 					} else if ($field->type === FieldType::NUMBER) {
 						$q->whereAnd($k, '=' , $v);
 					}
-				}
-			}
-		}
+				} // criteria is basic field
+			} // value not empty
+		}// each criteria
 
 		$q->orderAsc('name');
 

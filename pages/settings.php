@@ -29,8 +29,8 @@ if ($Input->P->ISSET->submit) {
 			$errors[] = 'Les mots de passe ne correspondent pas';
 		} else {
 			$changePassword = TRUE;
-			$q = new Query(Dual::meta());
-			$q->select(SqlExpr::func('PASSWORD', $Input->P->RAW->password)->privateBinds(), 'pass');
+			$q = Dual::query();
+			$q->select(SqlExpr::_PASSWORD($Input->P->RAW->password)->privateBinds(), 'pass');
 			$user->password = \salt\first($DB->execQuery($q)->data)->pass;
 		}
 	}
