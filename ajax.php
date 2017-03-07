@@ -4,8 +4,6 @@ use salt\Pagination;
 
 include('lib/base.php');
 
-$call = \salt\first(explode('&', $Input->S->RAW->QUERY_STRING));
-
 if (!$sso->isLogged()) {
 	header($Input->S->RAW->SERVER_PROTOCOL.' 401 Unauthorized', TRUE, 401);
 	die();
@@ -16,6 +14,7 @@ if (!$sso->isSsoAdmin()) {
 	die();
 }
 
+$call = \salt\first(explode('&', $Input->S->RAW->QUERY_STRING));
 $offset = $Input->G->RAW->offset;
 
 $result = array();

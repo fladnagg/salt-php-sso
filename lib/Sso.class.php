@@ -1,16 +1,15 @@
 <?php namespace sso;
 
-
-use salt\Query;
 use salt\DBException;
-use salt\UpdateQuery;
-use salt\SqlExpr;
 use salt\InsertQuery;
+use salt\Query;
+use salt\SqlExpr;
+use salt\UpdateQuery;
+use salt\Benchmark;
 
 class Sso extends SsoClient {
-
 	/**
-	 *
+	 * Check a login/password. Can send HTTP header for redirect user if needed
 	 * @param string $user
 	 * @param string $password
 	 * @return string error message if any, or NULL if OK.
@@ -225,4 +224,31 @@ class Sso extends SsoClient {
 		die();
 	}
 
+	/**
+	 * Check a server is listening
+	 * @param string $host the host to check 
+	 * @param int $port the port to use
+	 * @param int $timeout timeout in seconds, 1 by default
+	 * @return TRUE si the server is listening on that port, FALSE otherwise
+	 */
+	public static function pingServer($host, $port, $timeout=1) {
+		$op = NULL;
+		// clean protocol
+		$host = \salt\last(explode('://', $host, 2));
+		try {
+			ErrorHandler::disable();
+			$op = @fsockopen($host, $port, $errno, $errstr, $timeout);
+			ErrorHandler::init();
+			if ($op === FALSE) {
+				return FALSE;
+			}
+		} catch (\Exception $ex) {
+			ErrorHandler::init();
+			if (is_resource($op)) @fclose($op);
+			return FALSE;
+		}
+		ErrorHandler::init();
+		if (is_resource($op)) @fclose($op);
+		return TRUE;
+	}
 }

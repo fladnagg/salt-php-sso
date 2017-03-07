@@ -30,6 +30,9 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 		if (strpos(strtolower($host), 'ldap://') === FALSE) {
 			$host = 'ldap://'.$host;
 		}
+		if (!Sso::pingServer($host, $options->port, 5)) {
+			throw new BusinessException('Unable to reach LDAP host '.$host.':'.$options->port);
+		}
 
 		$ldap = @ldap_connect($host, $options->port);
 		if ($ldap === FALSE) {

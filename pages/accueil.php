@@ -61,6 +61,10 @@ if ($sso->getUser() !== NULL) {
 <?php if ($error !== NULL) { ?>
 		<div class="errors"><?= $Input->HTML($error) ?></div>
 <?php } ?>
+<?php if ($Input->G->ISSET->message) { ?>
+		<div class="errors"><?= $Input->G->HTML->message ?></div>
+<?php } ?>
+
 	<fieldset>
 		<table>
 			<tr>

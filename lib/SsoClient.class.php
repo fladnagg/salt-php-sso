@@ -78,7 +78,7 @@ class SsoClient {
 
 		$this->session = Session::getInstance();
 	}
-	
+
 	public static function getLogoutReason($reason) {
 		if (!array_key_exists($reason, self::$logoutReasons)) {
 			$reason = self::AUTH_KO_UNKNOWN;
@@ -123,7 +123,7 @@ class SsoClient {
 			} catch (\Exception $ex) {
 				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
 				$this->session->logout();
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.self::AUTH_KO_INIT_APP);
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.self::AUTH_KO_INIT_APP.'&message='.$Input->URL($ex->getMessage()));
 				die();
 			}
 		}

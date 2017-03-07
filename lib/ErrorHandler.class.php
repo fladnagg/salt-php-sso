@@ -10,15 +10,23 @@ class ErrorHandler {
 
 	private static $ignoreError = FALSE;
 	private static $ignoreException = FALSE;
+	
+	private static $active = FALSE;
 
 	public static function init() {
-		set_exception_handler(array(__NAMESPACE__.'\ErrorHandler', 'handleException'));
-		set_error_handler(array(__NAMESPACE__.'\ErrorHandler', 'handleError'), E_ALL | E_STRICT);
+		if (!self::$active) {
+			set_exception_handler(array(__NAMESPACE__.'\ErrorHandler', 'handleException'));
+			set_error_handler(array(__NAMESPACE__.'\ErrorHandler', 'handleError'), E_ALL | E_STRICT);
+			self::$active = TRUE;
+		}
 	}
 	
 	public static function disable() {
-		restore_exception_handler();
-		restore_error_handler();
+		if (self::$active) {
+			restore_exception_handler();
+			restore_error_handler();
+			self::$active = FALSE;
+		}
 	}
 
 	public static function addError($error) {

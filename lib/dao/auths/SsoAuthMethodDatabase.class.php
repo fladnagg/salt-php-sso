@@ -29,6 +29,10 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 	public function auth($user, $pass, \stdClass $options) {
 		$name = 'SSO-Auth-DB-'.md5(implode('/', array($options->database, $options->port, $options->user)));
 
+		if (!Sso::pingServer($options->host, $options->port, 5)) {
+			throw new BusinessException('Unable to reach Database host '.$options->host.':'.$options->port);
+		}
+		
 		DBHelper::register($name, 
 				$options->host, $options->port, $options->database, $options->user, $options->password, SSO_DB_CHARSET);
 		$db = DBHelper::getInstance($name);
