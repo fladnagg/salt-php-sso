@@ -35,15 +35,15 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 			// retrieve or create current profile
 			$q = SsoProfil::query(TRUE);
 			if ($Input->P->ISSET->save_recommended) {
-				$q->whereAnd('userId', 'IS', NULL);
+				$q->whereAnd('userId', 'IS', SqlExpr::value(NULL));
 			} else {
 				$q->whereAnd('userId', '=', $sso->getLogin());
+				$q->whereAnd('theme', '=', $themeId);
 			}
 			$q->whereAnd('appliId', '=', $appli);
-			$q->whereAnd('theme', '=', $themeId);
-			
+
 			$profil = \salt\first($DB->execQuery($q)->data);
-			
+
 			if ($profil === NULL) {
 				$user = NULL;
 				if (!$Input->P->ISSET->save_recommended) {
@@ -54,6 +54,11 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 			}
 			
 			if (is_array($Input->P->RAW->options) && ($Input->P->RAW->options['theme'] === $themeId)) {
+				if ($themeId !== $profil->theme) {
+					// with recommended profil, theme can be changed : so we set theme and reset options
+					$profil->theme = $themeId;
+					$profil->options = '';
+				}
 				$theme = $profil->getThemeObject();
 				foreach($Input->P->RAW->options as $field => $value) {
 					if ($field !== 'theme') {
