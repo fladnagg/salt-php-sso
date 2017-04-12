@@ -16,7 +16,11 @@ body {
 	margin-top:25px;
 }
 
-   
+#sso_menu_container, #sso_menu {
+	margin:0px;
+	padding:0px;
+}
+
 #sso_menu, #sso_user, #sso_menu ul, #sso_menu ul li {
 	display:inline-block;
 }
