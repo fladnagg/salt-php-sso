@@ -5,9 +5,49 @@ use salt\InsertQuery;
 use salt\Query;
 use salt\SqlExpr;
 use salt\UpdateQuery;
-use salt\Benchmark;
 
 class Sso extends SsoClient {
+	
+	/**
+	 * Retrieve all auth methods for a user
+	 * @param string $user
+	 * @return SsoAuthMethod[]
+	 */
+	public function authMethods($user) {
+		global $DB;
+		try {
+			$ssoUser = SsoUser::getById($DB, $user);
+		} catch (DBException $ex) {
+			if ($ex->getSqlStateErrorCode() === '42S02') {
+				header('Location: '.SSO_WEB_RELATIVE.'?page=init');
+				die();
+			}
+			throw $ex;
+		}
+		$auths = array();
+		if ($ssoUser !== NULL) {
+			$q = SsoAuthMethod::query(TRUE);
+			$qElem = SsoGroupElement::query();
+			$qElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
+			$qElem->whereAnd('group_id', '=', $ssoUser->auth_group); // avoid distinct select
+			$q->join($qElem, 'id', '=', $qElem->ref_id, 'LEFT OUTER');
+			$q->whereOr($qElem->group_id, '=', $ssoUser->auth_group); 	// by auth_group
+			$q->whereOr('id', '=', $ssoUser->auth);						// or by auth
+			$q->orderAsc('name');
+			$auths = $DB->execQuery($q)->data;
+		} else {
+			$q = SsoAuthMethod::query(TRUE);
+			$q->whereAnd('default', '=', TRUE);
+			$q->orderAsc('name');
+			$auths = $DB->execQuery($q)->data;
+		}
+		
+		if (count($auths) === 0) {
+			$auths[]=SsoAuthMethod::getLocal();
+		}
+		return $auths;
+	}
+	
 	/**
 	 * Check a login/password. Can send HTTP header for redirect user if needed
 	 * @param string $user
@@ -29,37 +69,38 @@ class Sso extends SsoClient {
 
 		try {
 
-			global $DB;
-			try {
-				$ssoUser = SsoUser::getById($DB, $user);
-			} catch (DBException $ex) {
-				if ($ex->getSqlStateErrorCode() === '42S02') {
-					header('Location: '.SSO_WEB_RELATIVE.'?page=init');
-					die();
-				}
-				throw $ex;
-			}
-			$auths = array();
-			if ($ssoUser !== NULL) {
-				$q = SsoAuthMethod::query(TRUE);
-				$qElem = SsoGroupElement::query();
-				$qElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
-				$qElem->whereAnd('group_id', '=', $ssoUser->auth_group); // avoid distinct select
-				$q->join($qElem, 'id', '=', $qElem->ref_id, 'LEFT OUTER');
-				$q->whereOr($qElem->group_id, '=', $ssoUser->auth_group); 	// by auth_group
-				$q->whereOr('id', '=', $ssoUser->auth);						// or by auth
-				$q->orderAsc('name');
-				$auths = $DB->execQuery($q)->data;
-			} else {
-				$q = SsoAuthMethod::query(TRUE);
-				$q->whereAnd('default', '=', TRUE);
-				$q->orderAsc('name');
-				$auths = $DB->execQuery($q)->data;
-			}
+// 			global $DB;
+// 			try {
+// 				$ssoUser = SsoUser::getById($DB, $user);
+// 			} catch (DBException $ex) {
+// 				if ($ex->getSqlStateErrorCode() === '42S02') {
+// 					header('Location: '.SSO_WEB_RELATIVE.'?page=init');
+// 					die();
+// 				}
+// 				throw $ex;
+// 			}
+// 			$auths = array();
+// 			if ($ssoUser !== NULL) {
+// 				$q = SsoAuthMethod::query(TRUE);
+// 				$qElem = SsoGroupElement::query();
+// 				$qElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
+// 				$qElem->whereAnd('group_id', '=', $ssoUser->auth_group); // avoid distinct select
+// 				$q->join($qElem, 'id', '=', $qElem->ref_id, 'LEFT OUTER');
+// 				$q->whereOr($qElem->group_id, '=', $ssoUser->auth_group); 	// by auth_group
+// 				$q->whereOr('id', '=', $ssoUser->auth);						// or by auth
+// 				$q->orderAsc('name');
+// 				$auths = $DB->execQuery($q)->data;
+// 			} else {
+// 				$q = SsoAuthMethod::query(TRUE);
+// 				$q->whereAnd('default', '=', TRUE);
+// 				$q->orderAsc('name');
+// 				$auths = $DB->execQuery($q)->data;
+// 			}
 
-			if (count($auths) === 0) {
-				$auths[]=SsoAuthMethod::getLocal();
-			}
+// 			if (count($auths) === 0) {
+// 				$auths[]=SsoAuthMethod::getLocal();
+// 			}
+			$auths = $this->authMethods($user);
 
 			$authUser = NULL;
 			$exceptions = array();

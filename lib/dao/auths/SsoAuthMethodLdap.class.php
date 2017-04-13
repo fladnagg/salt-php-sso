@@ -22,10 +22,7 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 		);
 	}
 
-	public function auth($user, $pass, \stdClass $options) {
-
-		$authUser = NULL;
-		
+	private function connect(\stdClass $options) {
 		$host = $options->host;
 		if (strpos(strtolower($host), 'ldap://') === FALSE) {
 			$host = 'ldap://'.$host;
@@ -33,7 +30,7 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 		if (!Sso::pingServer($host, $options->port, 5)) {
 			throw new BusinessException('Unable to reach LDAP host '.$host.':'.$options->port);
 		}
-
+		
 		$ldap = @ldap_connect($host, $options->port);
 		if ($ldap === FALSE) {
 			throw new BusinessException('Unable to connect to the LDAP '.$host.':'.$options->port);
@@ -45,44 +42,62 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 			@ldap_close($ldap);
 			throw new BusinessException('Unable to bind LDAP '.$host.':'.$options->port.' with provided DN and password ('.$error.')');
 		}
+		return $ldap;
+	}
+	
+	private function disconnect($ldap) {
+		@ldap_close($ldap);
+	}
+	
+	public function search($user, \stdClass $options) {
+
+		$ldap = $this->connect($options);
+		$authUser = $this->searchOnLdap($user, $options, $ldap);
+		$this->disconnect($ldap);
+		
+		return $authUser;
+	}
+	
+	private function searchOnLdap($user, \stdClass $options, $ldap) {
+		$authUser = NULL;
 		$r = @ldap_search($ldap, $options->dn, '('.$options->field_id.'='.self::escapeLdap($user).')' );
 		if ($r === FALSE) {
 			$error = ldap_error($ldap);
-			@ldap_close($ldap);
+			$this->disconnect($ldap);
 			throw new BusinessException('Unable to search user from LDAP ('.$error.')');
 		}
 		$r = @ldap_get_entries($ldap, $r);
 		if ($r === FALSE) {
 			$error = ldap_error($ldap);
-			@ldap_close($ldap);
+			$this->disconnect($ldap);
 			throw new BusinessException('Unable to browse user details from LDAP ('.$error.')');
 		}
-		if ($r['count'] === 0) {
-			@ldap_close($ldap);
-			return NULL; // unknown user
-		} else {
-			
-			for($i = 0; $i < $r['count']; $i++) {
-				$dn = $r[$i]['dn'];
 
-				$data = self::normalizeLdapData($r[$i]);
-				
-				$authUser = new AuthUser($data[$options->field_id], $data[$options->field_name],$data);
-				if (@ldap_bind($ldap, $dn, $pass)) {
-					$authUser->logged();
-					@ldap_close($ldap);
-					return $authUser;
-				} else {
-					$authUser->setError(ldap_error($ldap));
-				}
-			} // each entries
-		
-			@ldap_close($ldap);
+		if ($r['count'] > 0) {
+			$data = self::normalizeLdapData($r[0]);
+			$authUser = new AuthUser($data[$options->field_id], $data[$options->field_name],$data);
 		}
-		
+
 		return $authUser;
 	}
 	
+	public function auth($user, $pass, \stdClass $options) {
+
+		$ldap = $this->connect($options);
+		
+		$authUser = $this->searchOnLdap($user, $options, $ldap);
+		if ($authUser !== NULL) {
+			if (@ldap_bind($ldap, $authUser->dn, $pass)) {
+				$authUser->logged();
+			} else {
+				$authUser->setError(ldap_error($ldap));
+			}
+		}
+		
+		$this->disconnect($ldap);
+		
+		return $authUser;
+	}
 	
 	public static function escapeLdap($text) {
 		$replaces = array(	'\\' => '\5c',

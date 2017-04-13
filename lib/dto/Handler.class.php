@@ -11,5 +11,5 @@ abstract class Handler {
 	/**
 	 * @param AuthUser $user
 	 */
-	abstract public function init(AuthUser $user);
+	abstract public function init(AuthUser $user, SsoClient $sso);
 }

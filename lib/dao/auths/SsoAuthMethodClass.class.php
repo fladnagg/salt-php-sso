@@ -40,10 +40,38 @@ class SsoAuthMethodClass implements SsoAuthMethodInterface {
 		),$extraOptions);
 	}
 	
+	private function isDelegateDefineMethod($delegate, $method) {
+		try {
+			// avoid recursive call : check delegate really define the method
+			$ref = new \ReflectionClass($delegate);
+			$m = $ref->getMethod($method);
+			$cl = $m->getDeclaringClass();
+
+			if ($cl->name === $ref->name) {
+				return TRUE;
+			}
+		} catch (\Exception $ex) {
+			// do nothing
+		}
+		return FALSE;
+	}
+	
 	public function auth($user, $pass, \stdClass $options) {
 		$authMethod = $options->className;
 		$delegate = new $authMethod();
+		if (!$this->isDelegateDefineMethod($delegate, 'auth')) {
+			return NULL;
+		}
 		return $delegate->auth($user, $pass, $options);
+	}
+	
+	public function search($user, \stdClass $options) {
+		$authMethod = $options->className;
+		$delegate = new $authMethod();
+		if (!$this->isDelegateDefineMethod($delegate, 'search')) {
+			return NULL;
+		}
+		return $delegate->search($user, $options);
 	}
 	
 }

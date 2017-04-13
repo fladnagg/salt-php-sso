@@ -177,8 +177,10 @@ class ErrorHandler {
 				}
 				if (isset($row['function'])) {
 					$args=array();
-					foreach($row['args'] as $arg) {
-						$args[]=self::dumpArg($arg);
+					if (isset($row['args'])) {
+						foreach($row['args'] as $arg) {
+							$args[]=self::dumpArg($arg);
+						}
 					}
 					$message.=$row['function'].'('.implode(', ', $args).')';
 				}

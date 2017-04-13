@@ -149,8 +149,8 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 	
 	/**
 	 * 
-	 * @param unknown $user
-	 * @param unknown $pass
+	 * @param string $user
+	 * @param string $pass
 	 * @return AuthUser 
 	 */
 	public function auth($user, $pass) {
@@ -160,6 +160,20 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 		}
 
 		return self::$TYPES[$this->type]->auth($user, $pass, $options);
+	}
+	
+	/**
+	 *
+	 * @param string $user
+	 * @return AuthUser
+	 */
+	public function searchUser($user) {
+		$options = json_decode($this->options);
+		if ($options  === NULL) {
+			$options = new \stdClass();
+		}
+	
+		return self::$TYPES[$this->type]->search($user, $options);
 	}
 }
 

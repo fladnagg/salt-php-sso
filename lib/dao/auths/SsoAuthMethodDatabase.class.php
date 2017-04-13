@@ -27,23 +27,10 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 	}
 
 	public function auth($user, $pass, \stdClass $options) {
-		$name = 'SSO-Auth-DB-'.md5(implode('/', array($options->database, $options->port, $options->user)));
-
-		if (!Sso::pingServer($options->host, $options->port, 5)) {
-			throw new BusinessException('Unable to reach Database host '.$options->host.':'.$options->port);
-		}
 		
-		DBHelper::register($name, 
-				$options->host, $options->port, $options->database, $options->user, $options->password, SSO_DB_CHARSET);
-		$db = DBHelper::getInstance($name);
-
-		$authUser = NULL;
+		$authUser = $this->search($user, $options);
 		
-		$st = $db->execSQL($options->dataQuery, array(':user' => $user));
-		if ($st->rowCount() === 1) {
-			$data = $st->fetch(\PDO::FETCH_ASSOC);
-			$authUser = new AuthUser($data[$options->field_id], $data[$options->field_name], $data);
-			
+		if ($authUser !== NULL) {
 			$st = $db->execSQL($options->authQuery, array(':user' => $user, ':password' => $pass));
 			if ($st->rowCount() > 0) {
 				$authUser->logged();
@@ -55,5 +42,25 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 		return $authUser;
 	}
 	
-	
+	public function search($user, \stdClass $options) {
+		$name = 'SSO-Auth-DB-'.md5(implode('/', array($options->database, $options->port, $options->user)));
+		
+		if (!Sso::pingServer($options->host, $options->port, 5)) {
+			throw new BusinessException('Unable to reach Database host '.$options->host.':'.$options->port);
+		}
+		
+		DBHelper::register($name,
+				$options->host, $options->port, $options->database, $options->user, $options->password, SSO_DB_CHARSET);
+		$db = DBHelper::getInstance($name);
+		
+		$authUser = NULL;
+		
+		$st = $db->execSQL($options->dataQuery, array(':user' => $user));
+		if ($st->rowCount() === 1) {
+			$data = $st->fetch(\PDO::FETCH_ASSOC);
+			$authUser = new AuthUser($data[$options->field_id], $data[$options->field_name], $data);
+		}
+		
+		return $authUser;
+	}
 }

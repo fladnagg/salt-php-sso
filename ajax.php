@@ -4,21 +4,33 @@ use salt\Pagination;
 
 include('lib/base.php');
 
+$notAdminCalls = array('user');
+$call = \salt\first(explode('&', $Input->S->RAW->QUERY_STRING));
+
 if (!$sso->isLogged()) {
 	header($Input->S->RAW->SERVER_PROTOCOL.' 401 Unauthorized', TRUE, 401);
 	die();
 }
 
-if (!$sso->isSsoAdmin()) {
+if (!$sso->isSsoAdmin() && !in_array($call, $notAdminCalls)) {
 	header($Input->S->RAW->SERVER_PROTOCOL.' 403 Forbidden', TRUE, 403);
 	die();
 }
 
-$call = \salt\first(explode('&', $Input->S->RAW->QUERY_STRING));
 $offset = $Input->G->RAW->offset;
 
 $result = array();
 switch($call) {
+	case 'user' :
+		$methods = $sso->authMethods($Input->G->RAW->term);
+		foreach($methods as $method) {
+			$userData = $method->searchUser($Input->G->RAW->term);
+			if ($userData !== NULL) {
+				$result = $userData;
+				break;
+			}
+		}
+	break;
 	case 'users' :
 		$pagination = new Pagination($offset, SSO_MAX_AUTOCOMPLETE_ELEMENTS);
 		$data = SsoUser::search(array('name' => $Input->G->RAW->term), $pagination);
@@ -53,5 +65,7 @@ switch($call) {
 		header($Input->S->RAW->SERVER_PROTOCOL.' Bad Request', true, 400);
 		die();
 }
+
+header('Content-Type: application/json; charset='.SSO_CHARSET);
 
 echo json_encode($result);
