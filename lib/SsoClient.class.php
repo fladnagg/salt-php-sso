@@ -112,6 +112,10 @@ class SsoClient {
 			die();
 		}
 
+		if (!$this->isSsoPage()) {
+			$this->session->freeze();
+		}
+
 		if (!$authOnly) {
 			if (!$this->checkCredentials($fromURL)) {
 				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client');
@@ -122,14 +126,9 @@ class SsoClient {
 				$this->initApplication();
 			} catch (\Exception $ex) {
 				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-				$this->session->logout();
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.self::AUTH_KO_INIT_APP.'&message='.$Input->URL($ex->getMessage()));
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP.'&message='.$Input->URL($ex->getMessage()));
 				die();
 			}
-		}
-		
-		if (!$this->isSsoPage()) {
-			$this->session->freeze();
 		}
 	}
 
@@ -188,10 +187,32 @@ class SsoClient {
 	private function initApplication() {
 		$handler = $this->getClientHandler();
 		if ($handler !== NULL) {
-			$handler->init($this->getUser());
+			try {
+				set_error_handler(array($this, 'clientError'));
+				set_exception_handler(array($this, 'clientException'));
+				$handler->init($this->getUser(), $this);
+				restore_exception_handler();
+				restore_error_handler();
+			} catch (\Exception $ex) {
+				restore_exception_handler();
+				restore_error_handler();
+				throw $ex;
+			}
 		}
 	}
 
+	public function clientError($code, $message, $file, $line) {
+		$Input = In::getInstance();
+		error_log('SSO APP INIT ERROR: '.$message.' ('.$file.':'.$line.')');
+		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP.'&message='.$Input->URL($message));
+		die();
+		
+	}
+	
+	public function clientException($ex) {
+		$this->clientError(0, $ex->getMessage);
+	}
+	
 	private function checkUserAuth() {
 		$Input = In::getInstance();
 
