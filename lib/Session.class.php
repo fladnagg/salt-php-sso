@@ -96,7 +96,9 @@ class Session {
 		
 		if ($this->old['id'] !== '') {
 			$this->old['data'] = $_SESSION;
-			session_destroy();
+			// multiple request on same session can fail to destroy session, but not an issue : the session is destroyed by one request
+			// without @ we have annoying and useless "Session object destruction failed" messages
+			@session_destroy();
 		}
 	}
 	
@@ -145,7 +147,9 @@ class Session {
 	}
 	
 	public function logout() {
-		session_destroy();
+		// multiple request on same session can fail to destroy session, but not an issue : the session is destroyed by one request
+		// without @ we have annoying and useless "Session object destruction failed" messages
+		@session_destroy();
 		session_start();
 		session_regenerate_id(TRUE);
 		$this->data =& $_SESSION;
