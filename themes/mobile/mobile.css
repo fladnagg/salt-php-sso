@@ -5,7 +5,7 @@
   font-size: 12px;
   background: inherit;
   text-align:left;
-  position:fixed;
+  position:$visible$;
   top: $offset$px;
   left: $left$;
   right: $right$;

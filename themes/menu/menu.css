@@ -5,7 +5,7 @@
   font-size: 12px;
   text-align:center;
   margin-left:auto;
-  position:fixed;
+  position:$visible$;
   right: $right$;
   top: $top$;
   left: $left$;
