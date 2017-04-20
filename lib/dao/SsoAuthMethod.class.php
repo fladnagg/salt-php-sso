@@ -164,16 +164,16 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 	
 	/**
 	 *
-	 * @param string $user
+	 * @param string $search
 	 * @return AuthUser
 	 */
-	public function searchUser($user) {
+	public function searchUser($search) {
 		$options = json_decode($this->options);
 		if ($options  === NULL) {
 			$options = new \stdClass();
 		}
 	
-		return self::$TYPES[$this->type]->search($user, $options);
+		return self::$TYPES[$this->type]->search($search, $options);
 	}
 }
 

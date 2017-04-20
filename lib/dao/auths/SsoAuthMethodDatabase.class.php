@@ -28,7 +28,7 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 
 	public function auth($user, $pass, \stdClass $options) {
 		
-		$authUser = $this->search($user, $options);
+		$authUser = \salt\first($this->search($user, $options));
 		
 		if ($authUser !== NULL) {
 			$st = $db->execSQL($options->authQuery, array(':user' => $user, ':password' => $pass));
@@ -42,7 +42,7 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 		return $authUser;
 	}
 	
-	public function search($user, \stdClass $options) {
+	public function search($search, \stdClass $options) {
 		$name = 'SSO-Auth-DB-'.md5(implode('/', array($options->database, $options->port, $options->user)));
 		
 		if (!Sso::pingServer($options->host, $options->port, 5)) {
@@ -53,14 +53,20 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 				$options->host, $options->port, $options->database, $options->user, $options->password, SSO_DB_CHARSET);
 		$db = DBHelper::getInstance($name);
 		
-		$authUser = NULL;
+		$authUsers = array();
 		
-		$st = $db->execSQL($options->dataQuery, array(':user' => $user));
-		if ($st->rowCount() === 1) {
-			$data = $st->fetch(\PDO::FETCH_ASSOC);
-			$authUser = new AuthUser($data[$options->field_id], $data[$options->field_name], $data);
+		if (!is_array($search)) {
+			$search = array(':user' => $search);
+		} else {
+			return $authUsers; // not implemented: how search to other fields without placeholders ?
 		}
 		
-		return $authUser;
+		$st = $db->execSQL($options->dataQuery, $search);
+		if ($st->rowCount() === 1) {
+			$data = $st->fetch(\PDO::FETCH_ASSOC);
+			$authUsers[] = new AuthUser($data[$options->field_id], $data[$options->field_name], $data);
+		}
+		
+		return $authUsers;
 	}
 }

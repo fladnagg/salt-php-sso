@@ -22,11 +22,17 @@ $offset = $Input->G->RAW->offset;
 $result = array();
 switch($call) {
 	case 'user' :
-		$methods = $sso->authMethods($Input->G->RAW->term);
+		$search = $Input->G->RAW->term;
+		$methods = NULL;
+		if (is_array($search)) {
+			$methods = $sso->authMethods(NULL);
+		} else {
+			$methods = $sso->authMethods($search);
+		}
 		foreach($methods as $method) {
-			$userData = $method->searchUser($Input->G->RAW->term);
-			if ($userData !== NULL) {
-				$result = $userData;
+			$usersData = $method->searchUser($search);
+			if (count($usersData) > 0) {
+				$result = $usersData;
 				break;
 			}
 		}

@@ -19,9 +19,9 @@ interface SsoAuthMethodInterface {
 	/**
 	 * Search an user
 	 * 
-	 * @param string $user user
+	 * @param string $search search
 	 * @param \stdClass $options auth method options
-	 * @return AuthUser|NULL an AuthUser if user found or NULL otherwise.
+	 * @return AuthUser[] AuthUser founded, can be empty.
 	 */
-	public function search($user, \stdClass $options);
+	public function search($search, \stdClass $options);
 }

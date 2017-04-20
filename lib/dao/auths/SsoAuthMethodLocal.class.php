@@ -10,23 +10,28 @@ class SsoAuthMethodLocal implements SsoAuthMethodInterface {
 		return array();
 	}
 	
-	public function search($user, \stdClass $options) {
+	public function search($search, \stdClass $options) {
 		$db = DBHelper::getInstance('SSO');
 		
-		$authUser = NULL;
+		$authUsers = array();
+		
+		if (is_array($search)) {
+			return $authUsers; // not implemented : search on other fields
+		}
+
 		$ssoUser = SsoUser::getById($db, $user);
 
 		if ($ssoUser !== NULL) {
-			$authUser = new AuthUser($ssoUser->id, $ssoUser->name, array());
+			$authUsers[] = new AuthUser($ssoUser->id, $ssoUser->name, array());
 		}
-		return $authUser;
+		return $authUsers;
 	}
 	
 	public function auth($user, $pass, \stdClass $options) {
 		
 		$db = DBHelper::getInstance('SSO');
 		
-		$authUser = $this->search($user, $options);
+		$authUser = \salt\first($this->search($user, $options));
 
 		if ($authUser !== NULL) {
 			$q = SsoUser::query();

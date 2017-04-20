@@ -65,13 +65,13 @@ class SsoAuthMethodClass implements SsoAuthMethodInterface {
 		return $delegate->auth($user, $pass, $options);
 	}
 	
-	public function search($user, \stdClass $options) {
+	public function search($search, \stdClass $options) {
 		$authMethod = $options->className;
 		$delegate = new $authMethod();
 		if (!$this->isDelegateDefineMethod($delegate, 'search')) {
 			return NULL;
 		}
-		return $delegate->search($user, $options);
+		return $delegate->search($search, $options);
 	}
 	
 }

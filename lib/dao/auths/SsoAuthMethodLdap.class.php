@@ -49,18 +49,41 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 		@ldap_close($ldap);
 	}
 	
-	public function search($user, \stdClass $options) {
+	public function search($search, \stdClass $options) {
 
 		$ldap = $this->connect($options);
-		$authUser = $this->searchOnLdap($user, $options, $ldap);
+		$authUsers = $this->searchOnLdap($search, $options, $ldap);
 		$this->disconnect($ldap);
 		
-		return $authUser;
+		return $authUsers;
 	}
 	
-	private function searchOnLdap($user, \stdClass $options, $ldap) {
-		$authUser = NULL;
-		$r = @ldap_search($ldap, $options->dn, '('.$options->field_id.'='.self::escapeLdap($user).')' );
+	private function searchOnLdap($searchData, \stdClass $options, $ldap) {
+		if (!is_array($searchData)) {
+			$searchData = array($options->field_id => $searchData);
+		}
+		$search = array();
+		foreach($searchData as $field => $value) {
+			$value = self::escapeLdap($value);
+			if ($field !== $options->field_id) {
+				$value = '*'.$value.'*';
+			}
+			$search[] = '('.$field.'='.$value.')';
+		}
+		$search = '(&'.implode('', $search).')';
+
+		/**
+		 * ldap_search produce a warning if SIZELIMIT is reached, even with @
+		 * We don't want that warning, we know what we doing...
+		 */
+		set_error_handler(function() { /* ignore errors */ }, E_WARNING);
+		try {
+			$r = @ldap_search($ldap, $options->dn, $search, array(), 0, 10); // max 10 results
+		} catch (\Exception $ex) {
+			restore_error_handler();
+			throw $ex;
+		}
+		restore_error_handler();
 		if ($r === FALSE) {
 			$error = ldap_error($ldap);
 			$this->disconnect($ldap);
@@ -73,24 +96,35 @@ class SsoAuthMethodLdap implements SsoAuthMethodInterface {
 			throw new BusinessException('Unable to browse user details from LDAP ('.$error.')');
 		}
 
+		$authUsers = array();
+		
 		if ($r['count'] > 0) {
-			$data = self::normalizeLdapData($r[0]);
-			$authUser = new AuthUser($data[$options->field_id], $data[$options->field_name],$data);
+			foreach($r as $key => $ldapData) {
+				if ($key === 'count') {
+					continue;
+				}
+				$data = self::normalizeLdapData($ldapData);
+				$authUsers[] = new AuthUser($data[$options->field_id], $data[$options->field_name], $data);
+			}
 		}
 
-		return $authUser;
+		return $authUsers;
 	}
 	
 	public function auth($user, $pass, \stdClass $options) {
 
 		$ldap = $this->connect($options);
 		
-		$authUser = $this->searchOnLdap($user, $options, $ldap);
-		if ($authUser !== NULL) {
-			if (@ldap_bind($ldap, $authUser->dn, $pass)) {
-				$authUser->logged();
+		$authUser = NULL;
+		
+		$authUsers = $this->searchOnLdap($user, $options, $ldap);
+		foreach($authUsers as $user) {
+			$authUser = $user;
+			if (@ldap_bind($ldap, $user->dn, $pass)) {
+				$user->logged();
+				break;
 			} else {
-				$authUser->setError(ldap_error($ldap));
+				$user->setError(ldap_error($ldap));
 			}
 		}
 		
