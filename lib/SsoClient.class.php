@@ -41,8 +41,8 @@ class SsoClient {
 	private static $instance = NULL;
 
 	private static $logoutReasons = array(
-		self::AUTH_KO_AGENT => 'la session est invalide', 	// MTSISIS-66 : on ne donne pas trop d'informations 
-		self::AUTH_KO_IP => 'la session est invalide',		// MTSISIS-66 : on ne donne pas trop d'informations
+		self::AUTH_KO_AGENT => 'la session est invalide', 	// do not give too more informations 
+		self::AUTH_KO_IP => 'la session est invalide',		// do not give too more informations
 		self::AUTH_KO_NO_SESSION => 'la session n\'existe plus',
 		self::AUTH_KO_TIMEOUT => 'la session a expirée',
 		self::AUTH_KO_UNKNOWN => 'une erreur imprévue est survenue',
