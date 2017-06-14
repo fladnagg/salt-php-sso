@@ -109,12 +109,18 @@ class Sso extends SsoClient {
 				try {
 					$authUser = $auth->auth($user, $password);
 					if ($authUser === NULL) {
-						error_log($auth->name.' : Utilisateur inconnu ['.$user.'] ('.__FILE__.':'.__LINE__.')');
-						$exceptions['unknown'] = new BusinessException('Utilisateur inconnu ['.$user.']');
+						//error_log($auth->name.' : Utilisateur inconnu ['.$user.'] ('.__FILE__.':'.__LINE__.')');
+						if (!isset($exceptions['unknown'])) {
+							$exceptions['unknown'] = new BusinessException('Utilisateur inconnu ['.$user.']');
+						}
+						$exceptions['unknown']->addData($auth->name);
 					}
 				} catch (BusinessException $ex) {
-					error_log($auth->name.' : '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-					$exceptions[] = $ex;
+					//error_log($auth->name.' : '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
+					if (!isset($exceptions[$ex->getMessage()])) {
+						$exceptions[$ex->getMessage()] = new BusinessException($ex->getMessage(), $ex);
+					}
+					$exceptions[$ex->getMessage()]->addData($auth->name);
 				}
 				
 				if ($authUser !== NULL) {
@@ -140,9 +146,11 @@ class Sso extends SsoClient {
 							if (($authUser !== NULL) && (strlen($authUser->getError()) > 0)) {
 								$error = ' ('.$authUser->getError().')';
 							}
-							error_log($auth->name.' : Mot de passe incorrect pour '.$user.$error.' ('.__FILE__.':'.__LINE__.')');
+							// error_log($auth->name.' : Mot de passe incorrect pour '.$user.$error.' ('.__FILE__.':'.__LINE__.')');
 							// do not store exception if we have found user : it's a password error
-							throw new BusinessException('Mot de passe incorrect pour '.$user.$error);
+							$ex = new BusinessException('Mot de passe incorrect pour '.$user.$error);
+							$ex->addData($auth->name);
+							throw $ex;
 						}
 					} // not logged
 				} // user found
@@ -168,6 +176,10 @@ class Sso extends SsoClient {
 			return NULL;
 		} catch(BusinessException $be) {
 			$errorMessage = $be->getMessage();
+			$datas = $be->getData();
+			if (($datas !== NULL) && (count($datas) > 0)) {
+				$errorMessage.=' ('.implode(', ', $datas).')';
+			}
 		}
 		
 		return $errorMessage;

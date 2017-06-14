@@ -41,8 +41,8 @@ class SsoClient {
 	private static $instance = NULL;
 
 	private static $logoutReasons = array(
-		self::AUTH_KO_AGENT => 'le User Agent est incorrect',
-		self::AUTH_KO_IP => 'l\'adresse IP est incorrecte',
+		self::AUTH_KO_AGENT => 'la session est invalide', 	// MTSISIS-66 : on ne donne pas trop d'informations 
+		self::AUTH_KO_IP => 'la session est invalide',		// MTSISIS-66 : on ne donne pas trop d'informations
 		self::AUTH_KO_NO_SESSION => 'la session n\'existe plus',
 		self::AUTH_KO_TIMEOUT => 'la session a expirée',
 		self::AUTH_KO_UNKNOWN => 'une erreur imprévue est survenue',
@@ -126,7 +126,7 @@ class SsoClient {
 				$this->initApplication();
 			} catch (\Exception $ex) {
 				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP.'&message='.$Input->URL($ex->getMessage()));
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP);
 				die();
 			}
 		}
@@ -204,7 +204,7 @@ class SsoClient {
 	public function clientError($code, $message, $file, $line) {
 		$Input = In::getInstance();
 		error_log('SSO APP INIT ERROR: '.$message.' ('.$file.':'.$line.')');
-		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP.'&message='.$Input->URL($message));
+		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP);
 		die();
 		
 	}
@@ -222,13 +222,13 @@ class SsoClient {
 		if ($this->session->SSO_TIMEOUT === 0) {
 			$sessionid = $Input->C->RAW->{Session::SSO_SESSION_NAME.'0'};
 			if (session_id() !== $sessionid) {
-				error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session cookie. Destroy session ('.__FILE__.':'.__LINE__.')');
+				//error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session cookie. Destroy session ('.__FILE__.':'.__LINE__.')');
 				$this->session->logout();
 				return self::AUTH_KO_TIMEOUT;
 			}
 		} else {
 			if ($this->session->SSO_lastTime + $this->session->SSO_TIMEOUT < time()) {
-				error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session. Destroy session ('.__FILE__.':'.__LINE__.')');
+				//error_log('SSO - '.$this->session->SSO_LOGIN.' - Expired session. Destroy session ('.__FILE__.':'.__LINE__.')');
 				$this->session->logout();
 				return self::AUTH_KO_TIMEOUT;
 			}
@@ -274,7 +274,7 @@ class SsoClient {
 					return TRUE;
 				}
 			}
-			error_log('SSO - '.$this->session->SSO_LOGIN.' - No credential found for '.$appli.' ('.__FILE__.':'.__LINE__.')');
+			//error_log('SSO - '.$this->session->SSO_LOGIN.' - No credential found for '.$appli.' ('.__FILE__.':'.__LINE__.')');
 		}
 		return FALSE;
 	}

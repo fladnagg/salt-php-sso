@@ -59,10 +59,8 @@ if ($sso->getUser() !== NULL) {
 	<?= FormHelper::post() ?>
 	<h2>Merci de vous identifier</h2>
 <?php if ($error !== NULL) { ?>
-		<div class="errors"><?= $Input->HTML($error) ?></div>
-<?php } ?>
-<?php if ($Input->G->ISSET->message) { ?>
-		<div class="errors"><?= $Input->G->HTML->message ?></div>
+<?php 	error_log('[SSO][Warning] '.$error); ?>
+		<div class="errors">L'utilisateur ou le mot de passe est incorrect</div>
 <?php } ?>
 
 	<fieldset>
