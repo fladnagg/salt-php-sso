@@ -108,7 +108,7 @@ class SsoClient {
 		$this->session->SSO_GET = $params;
 		
 		if ($state !== self::AUTH_OK) {
-			header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.$state);
+			header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.$state, true, 303);
 			die();
 		}
 
@@ -118,7 +118,7 @@ class SsoClient {
 
 		if (!$authOnly) {
 			if (!$this->checkCredentials($fromURL)) {
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client');
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client', true, 303);
 				die();
 			}
 
@@ -126,7 +126,7 @@ class SsoClient {
 				$this->initApplication();
 			} catch (\Exception $ex) {
 				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP);
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP, true, 303);
 				die();
 			}
 		}
@@ -204,7 +204,7 @@ class SsoClient {
 	public function clientError($code, $message, $file, $line) {
 		$Input = In::getInstance();
 		error_log('SSO APP INIT ERROR: '.$message.' ('.$file.':'.$line.')');
-		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP);
+		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP, true, 303);
 		die();
 		
 	}

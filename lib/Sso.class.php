@@ -19,7 +19,7 @@ class Sso extends SsoClient {
 			$ssoUser = SsoUser::getById($DB, $user);
 		} catch (DBException $ex) {
 			if ($ex->getSqlStateErrorCode() === '42S02') {
-				header('Location: '.SSO_WEB_RELATIVE.'?page=init');
+				header('Location: '.SSO_WEB_RELATIVE.'?page=init', true, 303);
 				die();
 			}
 			throw $ex;
@@ -74,7 +74,7 @@ class Sso extends SsoClient {
 // 				$ssoUser = SsoUser::getById($DB, $user);
 // 			} catch (DBException $ex) {
 // 				if ($ex->getSqlStateErrorCode() === '42S02') {
-// 					header('Location: '.SSO_WEB_RELATIVE.'?page=init');
+// 					header('Location: '.SSO_WEB_RELATIVE.'?page=init', true, 303);
 // 					die();
 // 				}
 // 				throw $ex;
@@ -241,7 +241,7 @@ class Sso extends SsoClient {
 
 		$ssoUser = SsoUser::updateLoginOk($this->session->SSO_LOGIN, $user);
 		if ($ssoUser === NULL) {
-			header('Location: '.SSO_WEB_RELATIVE.'?page=init');
+			header('Location: '.SSO_WEB_RELATIVE.'?page=init', true, 303);
 			die();
 		}
 		
@@ -268,12 +268,12 @@ class Sso extends SsoClient {
 
 		session_write_close();
 
-		header('Location: '.$uri);
+		header('Location: '.$uri, true, 303);
 		die();
 	}
 
 	public function redirectApplications() {
-		header('Location: '.SSO_WEB_RELATIVE.'?page=apps');
+		header('Location: '.SSO_WEB_RELATIVE.'?page=apps', true, 303);
 		die();
 	}
 
