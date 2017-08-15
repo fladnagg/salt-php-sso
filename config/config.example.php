@@ -30,6 +30,9 @@ if (!defined('salt\CHARSET')) {
 	define('salt\CHARSET', SSO_CHARSET);
 }
 
+/** Default SALT locale **/
+define('salt\I18N_DEFAULT_LOCALE', 'en');
+
 /** Default SSO locale **/
 define('sso\SSO_LOCALE', 'en');
 
