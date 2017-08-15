@@ -154,6 +154,12 @@ div.tabs li.selected {
   font-weight: bold;
 }
 
+div.tabs li.extra {
+	float:right;
+	background-color: lightblue;
+	font-style: italic;
+}
+
 fieldset {
 	border-width: 2px;
 }
@@ -261,6 +267,17 @@ table.theme.results.options {
   margin:20px;
 }
 
+.console {
+	white-space: pre-wrap;
+	background-color: white;
+	border: 1px solid black;
+	padding:10px;
+	margin:auto;
+	font-family: monospace;
+	width:70%;
+	margin-bottom:10px;
+}
+
 .login fieldset {
   border:none;
 }
@@ -269,6 +286,7 @@ table {
   width:100%;
 }
 .field {
+  white-space: nowrap;
   text-align:right;
 }
 .field:after {

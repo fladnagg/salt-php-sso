@@ -1,0 +1,381 @@
+error:
+  title: ERREUR
+  technical: Erreur technique
+  bad_password: Mot de passe incorrect.
+  database_not_responding: Impossible de contacter la base de données %s:%s.
+  ldap_not_responding: Impossible de contacter le LDAP %s:%s.
+  ldap_connect: Impossible de se connecter au LDAP %s:%s.
+  # (%s) is the error returned by LDAP
+  ldap_bind: Impossible de se connecter au LDAP %s:%s avec le DN et le mot de passe (%s).
+  ldap_search: Erreur lors de la recherche d'un utilisateur dans le LDAP (%s).
+  ldap_browse: Erreur lors de la récupération des détails d'un utilisateur dans le LDAP (%s).
+
+  session:
+    header_sent: Impossible de démarrer la session SSO car les entêtes HTTP ont déjà été envoyées à %s:%s
+
+  db:
+    label: Base de données
+    query: Exécution d'une requête
+    connection: Connexion
+    syntax: Syntaxe
+    data: Données
+
+  app:
+    path_missing: Le chemin de l'application est obligatoire.
+    not_exists: "L'application n'existe pas : %s."
+    image_not_exists: "L'image indiquée n'existe pas : %s."
+  credential:
+    user_missing: Un utilisateur ou un groupe d'utilisateur doit être indiqué.
+    app_missing: Une application ou un groupe d'application doit être indiqué.
+
+  theme_unknown: "Theme inconnu : %s."
+
+  auth:
+    delete_local: Impossible de supprimer la méthode d'authentification locale.
+    delete_used: Impossible de supprimer la méthode d'authentification %s car elle est référencée par %s utilisateur(s).
+  
+  group:
+    delete_used: Impossible de supprimer le groupe %s car il est référencé par %s autorisation(s).
+    disable_used: Impossible de désactiver le(s) type(s) %s pour le groupe %s car le groupe contient %s élément(s) de ce(s) type(s).
+
+  user:
+    id_missing: L'ID de l'utilisateur est obligatoire.
+    delete_current: Il est impossible de supprimer l'utilisateur courant.
+    admin_current: Il est impossible d'enlever les droits administrateurs de l'utilisateur courant.
+    state_current: Il est impossible de modifier l'état de l'utilisateur courant.
+    password_db_user: Vous ne pouvez pas changer le mot de passe de l'utilisateur correspondant à la base de données.
+    password_mismatch: Les mots de passe ne correspondent pas.
+
+  object_has_error: "%s comporte une erreur : %s."
+  
+  logout_with_reason: Vous avez été déconnecté car %s.
+  user_missing: L'utilisateur est obligatoire.
+  user_state:
+    disabled: |
+      Votre compte [%s] est actuellement désactivé.
+      Vous devez contacter un administrateur pour l'activer.
+    pending: |
+      Votre compte [%s] est en attente de validation par un administrateur.
+      Merci de réessayer plus tard.
+  login: L'utilisateur ou le mot de passe est incorrect.
+  page:
+    access: Vous n'avez pas le droit d'accéder à cette page.
+    not_exists: La page demandée n'existe pas !
+    forbidden: La page demandée [%s] ne fait pas partie des pages autorisées.
+    id_missing: Le paramètre id est obligatoire pour accéder à la page %s.
+
+  admin:
+    added: "Impossible d'ajouter le nouvel objet : %s."
+    delete_missing: Impossible de retrouver l'objet à supprimer.
+    delete: "Impossible de supprimer l'objet : %s."
+    save: "Impossible de sauvegarder : %s."
+
+  ask:
+    exists: Il existe déjà un accès ou une demande d'accès pour cette application.
+    not_exists: Impossible de retrouver la demande à modifier
+    other_user: Seules les demandes de l'utilisateur connecté peuvent être modifiées
+
+  theme:
+    not_recommended: Le thème sélectionné ne peut pas être un thème recommandé.
+    invalid: Thème sélectionné invalide.
+
+  app:
+    auth: Une erreur est survenue lors de l'authentification à l'application demandée.
+    forbidden: |
+      Vous avez été redirigé vers cette page car vous n'aviez pas accès à l'application %s.
+      Merci de choisir une autre application ci-dessous.
+
+  login_user_unknown: Utilisateur inconnu [%s].
+  login_bad_password: Mot de passe incorrect pour [%s].
+
+field:
+  id: ID
+  selected: Sélectionné
+  # Appli + AuthMethod + Group + User
+  name: Nom
+  # AuthMethod + Group
+  default: Par défault
+  # AuthMethod + GroupElement
+  type: Type
+  # Credential + Profil
+  user: Utilisateur
+  application: Application
+  # VisibleTheme
+  userBgColor: Couleur de fond du bloc Utilisateur
+  userColor: Couleur de texte du bloc Utilisateur
+  menuBgColor: Couleur de fond du bloc Menu
+  menuColor: Couleur de texte du bloc Menu
+  menuBgHover: Couleur de fond au survol du Menu
+  menuHover: Couleur de texte au survol du Menu
+  visible: Toujours visible
+  # User
+  password: Mot de passe
+  confirm_password: Confirmer le mot de passe
+  auth_method: Méthode d'authentification
+  auth_methods: Méthodes d'authentification
+  language: Langue
+  admin: Administrateur
+  restrict_ip: Vérifier l'IP
+  restrict_agent: Vérifier le User-Agent
+  session_duration: Durée de la session
+  last_login: Dernier accès
+  login_count: Nombre de login réussis
+  last_failed_login: Dernier échec
+  failed_login_count: Nombre de login en échecs
+  state: Etat
+  # Profil
+  theme: Thème
+  enabled: Actif
+  options: Options
+  # GroupElement
+  ref_id: Ref ID
+  group_id: Groupe ID
+  # Group
+  types: Types
+  # Credential
+  appli_group: Groupe d'applications
+  user_group: Groupe d'utilisateurs
+  status: Statut
+  description: Description
+  # AuthMethod
+  create_on_fly: Création à la volée
+  parameters: Paramètres
+  # Appli
+  path: Chemin
+  handler: Gestionnaire
+  image: Image (64x64)
+  # AuthMethodDatabase + AuthMethodLdap
+  host: Hôte
+  port: Port
+  field_id: Champ ID
+  field_name: Champ Name
+  # AuthMethodDatabase
+  database: Base de données
+  db_user: Utilisateur
+  db_password: Mot de passe
+  authQuery: Requête de vérification
+  dataQuery: Requête de données
+  # AuthMethodClass
+  class_name: Nom de la classe
+  # AuthMethodLdap
+  bind_dn: Compte de connexion
+  bind_pass: Mot de passe
+  dn: Base DN
+
+logout_reason:
+  invalid: la session est invalide
+  not_exists: la session n'existe plus
+  expire: la session a expirée
+  unknown: une erreur imprévue est survenue
+  auth: une erreur est survenue lors de l'authentification à une application
+
+auth_type:
+  local: LOCAL
+  ldap: Ldap
+  db: Base de données
+  class: Classe
+
+credential_status:
+  asked: Demandée
+  refused: Refusée
+  validated: Validée
+
+admin:
+  user: Utilisateurs
+  appli: Applications
+  auth: Méthodes d'authentification
+  credential: Autorisations
+  group: Groupes
+  language: Langages
+
+group_type:
+  user: Utilisateurs
+  appli: Applications
+  auth: Authentifications
+
+user_state:
+  enabled: Actif
+  disabled: Inactif
+  pending: En attente de validation
+
+app_menu:
+  list: Applications autorisées
+  ask: Demandes d'accès
+
+all: Tous
+yes: "Oui"
+no: "Non"
+
+help:
+  click_for_display: Cliquez pour afficher l'aide
+  click_for_hide: Cliquez pour cacher l'aide
+  db:
+    authQuery: Requête devant remonter au moins une ligne si l'utilisateur est connu. Les placeholders :user et :password doivent être utilisés.
+    dataQuery: Requête devant remonter une ligne correspondant à l'utilisateur. Le placeholder :user doit être utilisé. Les champs remontés doivent contenir [Champ ID] et [Champ Name].
+    field_id: Nom du champ contenant l'identifiant unique de l'utilisateur retourné par la requête de donnée.
+    field_name: Nom du champ contenant le nom de l'utilisateur retourné par la requête de donnée.
+  ldap:
+    field_id: Nom du champ contenant l'identifiant unique de l'utilisateur retourné par le LDAP.
+    field_name: Nom du champ contenant le nom de l'utilisateur retourné par le LDAP.
+  appli:
+    path: Par rapport à la racine WEB du serveur.
+    handler: Correspond aux classes présentes dans le dossier plugins et implémentant sso\Handler.
+    icon: |
+      Par rapport à la racine de l'application.
+      S'affichera dans la liste des applications du SSO.
+  auth:
+    default: Sera utilisé dans l'ordre alphabétique si aucune méthode n'est spécifiée pour un utilisateur.
+    create: Un nouvel utilisateur authentifié depuis cette source sera créé dynamiquement dans le SSO. Dans le cas contraire, l'utilisateur sera quand même créé mais n'aura accès à rien et son compte devra être validé par un administrateur.
+  ask: Vous pouvez indiquer pourquoi vous souhaitez un accès dans le champ "Description"
+  user:
+    check_ip: >
+      A chaque accès, on vérifiera que l'adresse IP de l'utilisateur correspond à celle utilisée lors du dernier login. 
+      C'est une protection contre le vol de session, mais il ne faut pas l'activer si votre fournisseur d'accès ou votre moyen de vous connecter 
+      à internet passe par une ferme de proxy sortants, votre adresse IP n'étant alors pas fixe pour une même session.
+    check_agent: >
+      A chaque accès, on vérifiera que le User Agent (c'est à dire une chaîne caractérisant votre navigateur) correspond à celui utilisé lors du dernier login. 
+      C'est une protection contre le vol de session assez fiable car le User Agent ne change jamais en principe; mais beaucoup d'utilisateurs ont le même et
+      ce n'est pas une donnée privée puisqu'il est communiqué à chaque site visité.
+    session_duration: Au bout de cette durée sans connexion ou activité, une authentification sera redemandée. Si on choisit une durée de 0, la session expirera lors de la fermeture du navigateur.
+    password_locale: Le mot de passe n'est nécessaire que pour le type d'authentification "%s".
+
+  group:
+    type: Autorise l'utilisation du groupe pour ce type.
+    default: Les nouveaux éléments de ce type seront ajoutés à ce groupe automatiquement.
+  
+button:
+  add: Ajouter
+  delete: Supprimer
+  send: Envoyer
+  modify: Modifier
+  validate: Valider
+  cancel: Annuler
+  filter: Filtrer
+  save: Sauvegarder
+  modify_group: Modifier le groupe
+  new_request: Nouvelle demande
+  ask_again: Redemander
+  load_theme_options: Charger les options du thème
+  preview: Aperçu
+  load: Charger
+  check: Vérifier
+
+pagination:
+  results: "%s résultat(s)"
+  pages: "Page : %s / %s"
+  goto: Aller à la page
+  previous: Précédents
+  next: Suivants
+
+menu:
+  login: Identification
+  init: Initialisation
+  profile: Profil
+  admin: Administration
+  applications: Applications
+  return_last_page: Retour à la dernière page d'application consultée
+  return: Retour
+  logout: Se déconnecter
+
+label:
+  pages_title: SSO
+  welcome_login_text: Merci de vous identifier
+  restrict_login_to_session: Restreindre la connexion à cette session
+  public_computer: Ordinateur public
+  modify_parameters_of: Modifier les paramètres de %s
+  search: Recherche
+  choose_element: Choisir un élément...
+  in_group: Appartient au groupe
+  search_criteria: Critères de recherche
+  group: Groupe
+  actions: Actions
+  access_list: Liste des applications auxquelles vous avez accès
+  # footer
+  counters: Compteurs
+  time: Temps
+  page_generated: SSO v%s - Page générée en %s s
+
+  admin:
+    title: Administration SSO
+    list_element: Liste des %s
+    modify_group_elements: Modification des éléments du groupe "%s"
+    no_type_for_group: Aucun type n'est activé pour ce groupe
+    added: "%s a été ajouté."
+    added_default: Le nouvel élément a été ajouté aux groupes par défaut.
+    deleted: "%s a été supprimé."
+    modified: "%s a été modifié."
+    add_groups: "%s a été ajouté à %s groupe(s)."
+    remove_groups: "%s a été retiré de %s groupe(s)."
+    group_added: "%s élement(s) ont été ajoutés au groupe."
+    group_removed: "%s élement(s) ont été enlevés du groupe."
+    other_object_fields: Autres champs pour l'objet %s
+    modify_other_fields: Modifier les autres champs de l'objet %s
+    enabled: Actif
+    enabled_for: Actif pour
+    lang:
+      check: Vérifier les fichiers de langues
+      generate: Regénérer les classes de langues
+      generate_confirm: |
+        Regénérer toutes les classes de langues ?
+        Cette opération n'est à faire que lorsque les fichiers de langues ont été modifiés ET que le mode actif est "Généré"
+      current: Le langage actuel est "%s"
+      default: Le langage par défaut est "%s"
+      mode:
+        type: "Mode actif :"
+        auto: Automatique - Les classes de langues sont regénérées automatiquement à chaque changement des fichiers de langues (Mode par défaut).
+        generated: Généré - Les classes de langues sont générées manuellement et utilisées directement (I18n initialisé avec I18n::MODE_USE_GENERATED).
+  
+  ask:
+    title: Demandez l'accès à de nouvelles applications
+    added: Demande ajoutée.
+    deleted: La demande a bien été supprimée.
+    revived: La demande a bien été relancée.
+    all_access: Vous avez accès à toutes les applications disponibles.
+
+  theme:
+    title: Modifier le profil pour l'application %s
+    save_recommended: Le thème [%s] a été sauvegardé comme thème recommandé pour l'application [%s].
+    active_recommended: Le thème recommandé a été activé pour l'application [%s].
+    active: Le thème [%s] a été activé pour l'application [%s].
+    no_options: Le thème n'a pas d'option configurable
+    recommended: Thème recommandé (administrateurs seulement)
+    use_recommended: Utiliser le profil recommandé
+    description:
+      hidden: Ce thème n'affiche pas de menu visible sur l'application cliente.
+      menu: Un menu vertical déroulant dans un coin de la page.
+      mobile: Un menu vertical caché sur un bord de la page apparaissant au survol de la souris sur le symbole de menu.
+      recommended: Ce thème utilisera le thème recommandé pour cette application défini par un administrateur.
+      topbar: Un menu fixe horizontal en haut de la page.
+    position:
+      field: Position
+      top_left: En haut à gauche
+      top_right: En haut à droite
+      bottom_right: En bas à droite
+      bottom_left: En bas à gauche
+      left: A gauche
+      right: A droite
+    offset: Décalage (pixels)
+    background_color: Couleur de fond
+    connected_as: "Connecté en tant que : "
+
+  app:
+    title: Applications SSO pour l'utilisateur %s
+
+  init:
+    title: Initialisation du SSO
+    message: |
+      Le SSO n'est pas initialisé.
+      Avant d'accéder à l'initialisation du SOO, merci d'indiquer le mot de passe de la base de données.
+    success: |
+      Initialisation réussie.
+      Un utilisateur a été créé avec le login et le mot de passe de la base de données.
+    goto_configuration: Accéder à la configuration du SSO
+  
+  setting:
+    title: Profil du compte SSO %s
+    change_after_next_login: Les modifications ont été effectuées et seront effectives au prochain login.
+    language_change_next_page: La langue sera modifiée dès la prochaine page.
+    main_options: Options générales
+    security_options: Options de sécurité
+    statistics: Statistiques
+    

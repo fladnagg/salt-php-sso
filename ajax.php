@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * page for ajax calls
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso
+ */
+namespace sso;
 
 use salt\Pagination;
 
@@ -42,29 +49,29 @@ switch($call) {
 		$data = SsoUser::search(array('name' => $Input->G->RAW->term), $pagination);
 
 		if ($offset > 0) {
-			$result[]=array('label'=>'<< Précédents ('.$offset.')', 'offset' => ($offset-$pagination->getLimit()));
+			$result[]=array('label'=>'<< '.L::pagination_previous.' ('.$offset.')', 'offset' => ($offset-$pagination->getLimit()));
 		}
 		foreach($data->data as $row) {
 			$result[]=array('label'=>$row->name, 'value' => $row->id);
 		}
 		$more = $pagination->getCount()-($offset+$pagination->getLimit());
 		if ($more > 0) {
-			$result[]=array('label'=>'>> Suivants ('.$more.')', 'offset' => ($offset+$pagination->getLimit()));
+			$result[]=array('label'=>'>> '.L::pagination_next.' ('.$more.')', 'offset' => ($offset+$pagination->getLimit()));
 		}
 	break;
 	case 'applis' :
 		$pagination = new Pagination($offset, SSO_MAX_AUTOCOMPLETE_ELEMENTS);
 		$data = SsoAppli::search(array('name' => $Input->G->RAW->term), $pagination);
-	
+
 		if ($offset > 0) {
-			$result[]=array('label'=>'<< Précédents ('.$offset.')', 'offset' => ($offset-$pagination->getLimit()));
+			$result[]=array('label'=>'<< '.L::pagination_previous.' ('.$offset.')', 'offset' => ($offset-$pagination->getLimit()));
 		}
 		foreach($data->data as $row) {
 			$result[]=array('label'=>$row->name, 'value' => $row->id);
 		}
 		$more = $pagination->getCount()-($offset+$pagination->getLimit());
 		if ($more > 0) {
-			$result[]=array('label'=>'>> Suivants ('.$more.')', 'offset' => ($offset+$pagination->getLimit()));
+			$result[]=array('label'=>'>> '.L::pagination_next.' ('.$more.')', 'offset' => ($offset+$pagination->getLimit()));
 		}
 	break;
 	default :

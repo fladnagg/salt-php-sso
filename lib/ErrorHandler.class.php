@@ -1,18 +1,40 @@
-<?php namespace sso;
+<?php
+/**
+ * ErrorHandler class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\lib
+ */
+namespace sso;
 
 use salt\DBException;
 
+/**
+ * Handle error
+ */
 class ErrorHandler {
 
+	/**
+	 * @var string prefix for encapsuled errors */
 	const SUBERROR_PREFIX = '  ';
 
+	/**
+	 *
+	 * @var string[] all error messages */
 	public static $ERRORS = array();
-
+	/**
+	 * @var boolean TRUE for ignore PHP errors */
 	private static $ignoreError = FALSE;
+	/**
+	 * @var boolean TRUE for ignore PHP exception */
 	private static $ignoreException = FALSE;
-	
+	/**
+	 * @var boolean TRUE if ErrorHandler is active, FALSE otherwise */
 	private static $active = FALSE;
 
+	/**
+	 * Set the ErrorHandler
+	 */
 	public static function init() {
 		if (!self::$active) {
 			set_exception_handler(array(__NAMESPACE__.'\ErrorHandler', 'handleException'));
@@ -20,7 +42,10 @@ class ErrorHandler {
 			self::$active = TRUE;
 		}
 	}
-	
+
+	/**
+	 * Disable the ErrorHandler and restore previous handler
+	 */
 	public static function disable() {
 		if (self::$active) {
 			restore_exception_handler();
@@ -29,21 +54,67 @@ class ErrorHandler {
 		}
 	}
 
+	/**
+	 * Manually add a global error
+	 * @param string $error Error message
+	 */
 	public static function addError($error) {
 		self::$ERRORS[]=$error;
 	}
 
+	/**
+	 * Disable error handling
+	 */
 	public static function ignoreError() {
 		self::$ignoreError = TRUE;
 	}
 
+	/**
+	 * Disable exception handling
+	 */
 	public static function ignoreException() {
 		self::$ignoreException = TRUE;
 	}
 
+	/**
+	 * Enabled error and exception handling
+	 */
 	public static function dontIgnoreExceptionAndError() {
 		self::$ignoreError = FALSE;
 		self::$ignoreException = FALSE;
+	}
+
+	/**
+	 * Replace the 2nd parameter of all auth* functions for avoid display user password in error messages and logs
+	 * @param Exception|mixed[] $exception Exception or stack returned by debug_backtrace()
+	 */
+	private static function hidePasswordInStack($exception) {
+
+		if ($exception instanceof \Exception) {
+			$cl = new \ReflectionClass($exception);
+			while(($cl !== NULL) && !$cl->hasProperty('trace')) {
+				$cl = $cl->getParentClass();
+			}
+			$p = $cl->getProperty('trace');
+			$p->setAccessible(true);
+			$trace = $p->getValue($exception);
+		} else {
+			$trace = $exception;
+		}
+
+		foreach($trace as $k => $t) {
+			// Hide password : always 2nd argument of auth* methods
+			if (isset($t['function']) && (strpos($t['function'], 'auth') === 0)) {
+				if (isset($t['args']) && count($t['args']) > 1) {
+					$t['args'][1] = '**HIDDEN**';
+					$trace[$k] = $t;
+				}
+			}
+		}
+
+		if ($exception instanceof \Exception) {
+			$p->setValue($exception, $trace);
+		}
 	}
 
 	/**
@@ -51,6 +122,8 @@ class ErrorHandler {
 	 * @param \Exception $exception
 	 */
 	public static function handleException($exception) {
+		self::hidePasswordInStack($exception);
+
 		error_log($exception.' ('.__FILE__.':'.__LINE__.')');
 
 		if (ini_get('error_reporting') == 0) {
@@ -59,27 +132,27 @@ class ErrorHandler {
 
 		$message='';
 		if ($exception instanceof DBException) {
-			$message.='Base de données - Exécution d\'une requête';
+			$message.=L::error_db_label.' - '.L::error_db_query;
 		} else if ($exception instanceof BusinessException) {
 			$message.=$exception->getMessage();
 		} else if ($exception instanceof \PDOException) {
-			$message.='Base de données - ';
+			$message.=L::error_db_label.' - ';
 			// Some errors on http://docstore.mik.ua/orelly/java-ent/jenut/ch08_06.htm
 			switch(substr($exception->getCode(), 0, 2)) {
 				case '08':
 				case '10':
 				case '20':
-					$message.='Connexion';
+					$message.=L::error_db_connection;
 					break;
-				case '2A': $message.='Syntaxe';
+				case '2A': $message.=L::error_db_syntax;
 				break;
-				case '22': $message.='Données';
+				case '22': $message.=L::error_db_data;
 				break;
-				default: $message.='Erreur technique '.$exception->getCode();
+				default: $message.=L::error_technical.' '.$exception->getCode();
 			}
 			// 		$message.=' - '.$exception->getMessage();
 		} else {
-			$message.='Erreur technique';
+			$message.=L::error_technical;
 		}
 		self::$ERRORS[]=$message;
 
@@ -99,10 +172,10 @@ class ErrorHandler {
 	}
 
 	/**
-	 * Permet de convertir la chaine passée en paramètre dans le bon Charset.
-	 * Il est possible de récupérer un charset différent lorsque l'extension qui génère la chaine propage un message natif du système.
-	 * @param string $s
-	 * @return string
+	 * Convert an error message in a valid charset.
+	 * Some errors are in a different charset if the error came from a native system error.
+	 * @param string $s the message in unknown charset
+	 * @return string the message in SSO charset
 	 */
 	private static function fixEncoding($s) {
 		if (FALSE === mb_detect_encoding($s, array(SSO_CHARSET), true)) {
@@ -116,8 +189,6 @@ class ErrorHandler {
 		return $s;
 	}
 
-
-
 	/**
 	 * End a page with errors display
 	 */
@@ -127,9 +198,11 @@ class ErrorHandler {
 		if (ob_get_level() > 0) {
 			ob_end_clean(); // we don't display the page in progress
 		}
-		
-		if (!headers_sent($f, $l) && !defined(__NAMESPACE__.'\SSO_TITLE')) {
-			define(__NAMESPACE__.'\SSO_TITLE', 'ERROR');
+
+		if (!headers_sent($f, $l) && !defined('sso\SSO_TITLE')) {
+			/**
+			 * @ignore */
+			define('sso\SSO_TITLE', L::error_title);
 			include(SSO_RELATIVE.'pages/layout/header.php');
 		}
 
@@ -137,15 +210,13 @@ class ErrorHandler {
 		die(); // we stop on errors
 	}
 
-
-
 	/**
 	 * Handle PHP error
-	 * @param unknown $errno
-	 * @param string $errstr
-	 * @param string $errfile
-	 * @param number $errline
-	 * @param array $errcontext
+	 * @param int $errno error number
+	 * @param string $errstr error message
+	 * @param string $errfile file of the error
+	 * @param number $errline line number of the error
+	 * @param array $errcontext context of the error
 	 */
 	public static function handleError($errno, $errstr, $errfile, $errline, $errcontext) {
 
@@ -163,13 +234,15 @@ class ErrorHandler {
 			return;
 		}
 
-		self::$ERRORS[]='Erreur technique : '.$errstr;
+		self::$ERRORS[]=L::error_technical.' : '.$errstr;
 
 		if (ini_get('display_errors') === '1') {
 			self::$ERRORS[]=self::SUBERROR_PREFIX.$errno.' '.$errfile.':'.$errline;
-			
+
 			$stack = debug_backtrace();
 			array_shift($stack); // we remove handleError
+			self::hidePasswordInStack($stack);
+
 			$message = '';
 			foreach($stack as $row) {
 				if (isset($row['file'])) {
@@ -194,12 +267,17 @@ class ErrorHandler {
 		}
 	}
 
+	/**
+	 * Convert arguments to string
+	 * @param mixed $arg can be anything
+	 * @return string a string that represent the argument
+	 */
 	private static function dumpArg($arg) {
 		if ($arg === NULL) {
 			return 'NULL';
 		} else if (is_scalar($arg)) {
 			if (is_bool($arg)) {
-				 return $arg?'TRUE':FALSE;
+				 return $arg?'TRUE':'FALSE';
 			} else if (is_int($arg)) {
 				return $arg;
 			} else {

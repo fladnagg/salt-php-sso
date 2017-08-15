@@ -1,49 +1,79 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoAppliViewHelper class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\view
+ */
+namespace sso;
 
 use salt\Field;
 use salt\Base;
 use salt\FormHelper;
 use salt\Salt;
 
+/**
+ * ViewHelper for SsoAppli
+ */
 class SsoAppliViewHelper extends SsoGroupableViewHelper {
 
+	/**
+	 * @var string[] list of help texts : fieldName => helpText */
 	private static $HELP = array(
-		'path' => "Par rapport à la racine WEB du serveur",
-		'handler' => "Correspond aux classes présentes dans le dossier plugins et implémentant sso\Handler",
-		'icon' => "Par rapport à la racine de l'application
-S'affichera dans la liste des applications du SSO",
+		'path' => L::help_appli_path,
+		'handler' => L::help_appli_handler,
+		'icon' => L::help_appli_icon,
 	);
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Field $field the field to display
+	 * @param string $format format to use for change the output
+	 * @see \sso\SsoGroupableViewHelper::column()
+	 */
 	public function column(Field $field, $format = NULL) {
-		
+
 		global $Input;
-		
+
 		$result = parent::column($field, $format);
-		
+
 		if (($format === 'columns') && isset(self::$HELP[$field->name])) {
 			$result.='&nbsp;<img src="'.SSO_WEB_RELATIVE.'images/help.png" alt="aide" title="'.$Input->HTML(self::$HELP[$field->name]).'" class="aide"/>';
 		}
 
 		return $result;
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to edit
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \sso\SsoGroupableViewHelper::edit()
+	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
-		
+
 		switch($field->name) {
 			case 'handler':
 				return FormHelper::select($field->name, $this->handlersList(), $value);
 			break;
 		}
-		
+
 		return parent::edit($object, $field, $value, $format, $params);
 	}
 
+	/**
+	 * Retrieve handler list
+	 * @return string[] className => className
+	 */
 	private function handlersList() {
 		$classes = Salt::getClassesByPath(realpath(SSO_RELATIVE.'plugins'));
 
 		$handlers = array();
 		foreach($classes as $cl => $file) {
-			
+
 			try {
 				$c = new $cl();
 				if ($c instanceof Handler) {
@@ -57,5 +87,5 @@ S'affichera dans la liste des applications du SSO",
 		}
 		return array('' => '')+$handlers;
 	}
-	
+
 }

@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * display application settings
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
 
 use salt\FormHelper;
 use salt\InsertQuery;
@@ -17,20 +24,20 @@ $appli = \salt\last(explode('_', $id, 2));
 $currentTheme = NULL;
 
 if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
-	
+
 	$themeId = $Input->P->RAW->theme;
 
 	$currentTheme = $themeId;
-	
+
 	if ($Input->P->ISSET->save_recommended && !SsoProfil::isThemeValid($themeId, NULL)) {
-		$errorsProfils[]='Le thème sélectionné ne peut pas être un thème recommandé';
+		$errorsProfils[] = L::error_theme_not_recommended;
 
 	} else if (!SsoProfil::isThemeValid($themeId, $appli)) {
-		$errorsProfils[]='Thème sélectionné invalide';
+		$errorsProfils[] = L::error_theme_invalid;
 
 	} else {
 		$profil = NULL;
-		
+
 		if (!SsoProfil::isInternalTheme($themeId)) {
 			// retrieve or create current profile
 			$q = SsoProfil::query(TRUE);
@@ -52,7 +59,7 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 				$profil = SsoProfil::createNew($appli, $appliName, $user);
 				$profil->theme = $themeId;
 			}
-			
+
 			if (is_array($Input->P->RAW->options) && ($Input->P->RAW->options['theme'] === $themeId)) {
 				if ($themeId !== $profil->theme) {
 					// with recommended profil, theme can be changed : so we set theme and reset options
@@ -69,7 +76,7 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 			}
 			$profil->enabled = TRUE;
 		}
-		
+
 		$disabledQuery = NULL;
 
 		// disable all
@@ -78,16 +85,16 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 			$disabledQuery->allowMultipleChange();
 			$disabledQuery->whereAnd('userId', '=', $sso->getLogin());
 			$disabledQuery->whereAnd('appliId', '=', $appli);
-	
+
 			if (!SsoProfil::isInternalTheme($themeId)) {
 				$disabledQuery->whereAnd('theme', '<>', $themeId);
 			}
-			
+
 			$disabledQuery->set('enabled', FALSE);
 		}
 
 		$DB->beginTransaction();
-		
+
 		try {
 			if ($disabledQuery !== NULL) {
 				$DB->execUpdate($disabledQuery);
@@ -100,31 +107,26 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 					$DB->execUpdate(new UpdateQuery($profil));
 				}
 			}
-			
+
 			$DB->commit();
-			
+
 			SsoProfil::initProfiles($sso);
 
-			$message = '';
 			if ($Input->P->ISSET->save_recommended) {
-				$message.='Le thème ['.$themeId.'] a été sauvegardé comme thème recommandé';
+				$oksProfils[] = L::label_theme_save_recommended($themeId, $appliName);
+			} elseif ($themeId === SsoProfil::RECOMMENDED_PROFILE) {
+				$oksProfils[] = L::label_theme_active_recommended($appliName);
 			} else {
-				if ($themeId === SsoProfil::RECOMMENDED_PROFILE) {
-					$message.='Le thème recommandé a été activé';
-				} else {
-					$message.='Le thème ['.$themeId.'] a été activé';
-				}
+				$oksProfils[] = L::label_theme_active($themeId, $appliName);
 			}
-			$message.=' pour l\'application ['.$appliName.']';
 
-			$oksProfils[] = $message;
 		} catch (\Exception $ex) {
 			$oksProfils = array();
 			$DB->rollback();
 			throw $ex;
 		}
 	} // theme valid
-	
+
 } // save profil
 
 if ($Input->P->ISSET->load) {
@@ -178,7 +180,7 @@ if (!SsoProfil::isInternalTheme($currentTheme) || ($currentTheme === NULL)) {
 	} else {
 		$q->whereAnd('theme', '=', $currentTheme);
 	}
-		
+
 	$q->whereAnd('appliId', '=', $appli);
 
 	$profile = \salt\first($DB->execQuery($q)->data);
@@ -201,40 +203,32 @@ ViewControl::edit();
 ?>
 <?= FormHelper::post(NULL, array('page', 'id')) ?>
 
-<h4>Modifier le profil pour l'application <?= $Input->HTML($appliName) ?></h4>
+<h4><?= $Input->HTML(L::label_theme_title($appliName)) ?></h4>
 
 <?php if (count($errorsProfils) > 0) {?>
-<div class="errors">
-<?php 	foreach($errorsProfils as $err) {?>
-	<?= $Input->HTML($err)?><br/>
-<?php 	}?>
-</div>
+<div class="errors"><?= nl2br($Input->HTML(implode("\n", $errorsProfils)))?></div>
 <?php }?>
 <?php if (count($oksProfils) > 0) {?>
-<div class="ok">
-<?php 	foreach($oksProfils as $ok) {?>
-	<?= $Input->HTML($ok)?><br/>
-<?php 	}?>
-</div>
+<div class="ok"><?= nl2br($Input->HTML(implode("\n", $oksProfils)))?></div>
 <?php }?>
 <table class="theme results options">
 	<tr>
 		<th class="compact"><?= SsoProfil::COLUMN('theme') ?></th>
 		<td><?= $profile->FORM->theme ?>
-			&nbsp;<?= FormHelper::input('load', 'submit', 'Charger les options du thème') ?>
+			&nbsp;<?= FormHelper::input('load', 'submit', L::button_load_theme_options) ?>
 		</td>
 	</tr>
 	<tr>
-		<th class="compact">Description</th>
+		<th class="compact"><?= $Input->HTML(L::field_description) ?></th>
 		<td><?= $Input->HTML($theme->description()) ?></td>
 	</tr>
-	<tr><th colspan="2">Options</th></tr>
+	<tr><th colspan="2"><?= $Input->HTML(L::field_options) ?></th></tr>
 <?php if (count($theme->getOptions()) === 0) { ?>
-	<tr><td colspan="2">Le thème n'a pas d'option configurable</td></tr>
+	<tr><td colspan="2"><?= $Input->HTML(L::label_theme_no_options) ?></td></tr>
 <?php } else { ?>
 <?php 	FormHelper::withNameContainer('options')?>
 	<tr class="hidden"><td colspan="2"><?= FormHelper::input('theme', 'hidden', $profile->theme) ?></td></tr>
-<?php 	foreach($theme->getOptions() as $fieldName => $value) {?>	
+<?php 	foreach($theme->getOptions() as $fieldName => $value) {?>
 	<tr class="options">
 		<td class="field compact" ><?= $theme->COLUMN($fieldName) ?></td>
 		<td class="input"><?= $theme->FORM->$fieldName?></td>
@@ -247,31 +241,34 @@ ViewControl::edit();
 <table class="actions">
 	<tr>
 		<td>
-			<?= FormHelper::input('save', 'submit', 'Sauvegarder') ?>
-			&nbsp;<?= FormHelper::input('preview', 'submit', 'Aperçu') ?>
+			<?= FormHelper::input('save', 'submit', L::button_save) ?>
+			&nbsp;<?= FormHelper::input('preview', 'submit', L::button_preview) ?>
 		</td>
 	</tr>
 <?php if ($sso->isSsoAdmin()) {?>
 	<tr>
-		<td>Thème recommandé (administrateurs seulement):&nbsp;
-		<?= FormHelper::input('load_recommended', 'submit', 'Charger') ?>
+		<td><?= $Input->HTML(L::label_theme_recommended) ?>:&nbsp;
+		<?= FormHelper::input('load_recommended', 'submit', L::button_load) ?>
 		&nbsp;
-		<?= FormHelper::input('save_recommended', 'submit', 'Sauvegarder') ?>
+		<?= FormHelper::input('save_recommended', 'submit', L::button_save) ?>
 		</td>
 	</tr>
 <?php } ?>
 </table>
 
-<?php if (($Input->P->ISSET->preview) && !SsoProfil::isPreview()) {?>
-<?php 
+<?php if ($Input->P->ISSET->preview) {?>
+<?php
 /**
- * The preview action set the preview profile in session, but menu is already loaded, so
+ * The preview action set the preview profile in session, but if menu is already loaded,
  * we have to reload page again for display the preview. Calling the load keep all input values
  */
 ?>
-<script>
+<script type="text/javascript">
 	$(function() {
-		$('input[name=load]')[0].click();
+		// we don't load the preview menu yet ? reload page !
+		if ($('head link[href*="sso_menu.css.php?<?= SsoProfil::PREVIEW_KEY ?>="]').length === 0) {
+			$('input[name=load]')[0].click();
+		}
 	});
 </script>
 <?php } ?>

@@ -1,26 +1,31 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoCredentialViewHelper class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\view
+ */
+namespace sso;
 
 use salt\Base;
 use salt\BaseViewHelper;
 use salt\Field;
 use salt\FormHelper;
 
+/**
+ * ViewHelper for Credential
+ */
 class SsoCredentialViewHelper extends BaseViewHelper {
-	
-	private function getGroupOptions($type, array $contentsByTypeGroup) {
-		static $results = array();
-		if (!isset($results[$type])) {
-			$options = SsoGroup::getActive($type);
-			$elements = $contentsByTypeGroup[$type];
-			foreach($options as $k => $v) {
-				$options[$k] = array('value' => $v.' ('.$elements[$k]['count'].')', 'title' => implode("\n", $elements[$k]['tooltip']));
-			}
-			$results[$type] = $options;
-		}
-		
-		return $results[$type];
-	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to display
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \salt\BaseViewHelper::show()
+	 */
 	public function show(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		switch($field->name) {
@@ -31,8 +36,18 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 
 		return parent::show($object, $field, $value, $format, $params);
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to edit
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \salt\BaseViewHelper::edit()
+	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
+		global $Input;
 		static $applis = NULL;
 		static $users = NULL;
 
@@ -43,7 +58,7 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 				$value = $v;
 			}
 		}
-		
+
 		switch($field->name) {
 			case 'appli':
 				if ($format === 'search') {
@@ -55,26 +70,26 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 				if (isset($params['applis'][$value])) {
 					$applis[$value] = $params['applis'][$value];
 				}
-				
-				$groupes = $this->getGroupOptions(SsoGroupElement::TYPE_APPLI, $params['tooltip']);
+
+				$groupes = SsoGroupableViewHelper::getGroupOptions(SsoGroupElement::TYPE_APPLI, $params['tooltip']);
 				foreach($groupes as $k => $v) {
 					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
-				$opts = array(''=>array('value' => '', 'title' => ''))+$applis+array('Groupes' => array('group' => $groupes));
-				
+				$opts = array(''=>array('value' => '', 'title' => ''))+$applis+array(L::admin_group => array('group' => $groupes));
+
 				if (($value === NULL) && ($object->appli_group !== NULL)) {
 					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->appli_group;
 				}
-				
+
 				$result = FormHelper::select($field->name, $opts, $value, array('selectTitle'), array('onchange' => 'javascript: selectTitle(this)'))
  				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=applis&amp;edit='.substr($value, strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE)).'">'
- 				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="Modifier le groupe" title="Modifier le groupe"/>'
+ 				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify_group).'" title="'.$Input->HTML(L::button_modify_group).'"/>'
  				.'</a>';
 				;
-				
+
 				$result.=$this->autocompleteSelect(FormHelper::getName($field->name), SSO_WEB_RELATIVE.'ajax.php?applis');
-				
+
 				return $result;
 
 			break;
@@ -82,31 +97,31 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 				if ($format === 'search') {
 					return FormHelper::input($field->name, 'text');
 				}
-				
+
 				$users=array();
 				if (isset($params['users'][$value])) {
-					$users[$value] = $params['users'][$value]; 
+					$users[$value] = $params['users'][$value];
 				}
 
-				$groupes = $this->getGroupOptions(SsoGroupElement::TYPE_USER, $params['tooltip']);
+				$groupes = SsoGroupableViewHelper::getGroupOptions(SsoGroupElement::TYPE_USER, $params['tooltip']);
 				foreach($groupes as $k => $v) {
 					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
-				$opts = array(''=>array('value' => '', 'title' => ''))+$users+array('Groupes' => array('group' => $groupes));
-				
+				$opts = array(''=>array('value' => '', 'title' => ''))+$users+array(L::admin_group => array('group' => $groupes));
+
 				if (($value === NULL) && ($object->user_group !== NULL)) {
 					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->user_group;
 				}
 
 				$result = FormHelper::select($field->name, $opts, $value, array('selectTitle'), array('onchange' => 'javascript: selectTitle(this)'))
 				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=users&amp;edit='.substr($value, strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE)).'">'
-				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="Modifier le groupe" title="Modifier le groupe"/>'
+				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify_group).'" title="'.$Input->HTML(L::button_modify_group).'"/>'
 				.'</a>';
 				;
 
 				$result.=$this->autocompleteSelect(FormHelper::getName($field->name), SSO_WEB_RELATIVE.'ajax.php?users');
-				
+
 				return $result;
 			break;
 			case 'status':
@@ -119,35 +134,52 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 
 		return parent::edit($object, $field, $value, $format, $params);
 	}
-	
+
+	/**
+	 * Improve a select for autocomplete from ajax URL
+	 *
+	 * Add an option "Choose element" to select that will display an overlay with autocomplete field, and selected value is added back to select input
+	 *
+	 * @param string $origin name of the autocomplete input
+	 * @param string $url ajax URL to request for values
+	 * @return string HTML text for add after select for enable autocomplete
+	 */
 	private function autocompleteSelect($origin, $url) {
+		global $Input;
+
+		$search = $Input->HTML(L::label_search);
+		$cancel = $Input->HTML(L::button_cancel);
+		$validate = $Input->HTML(L::button_validate);
+
 		$result = <<<FORM
 <div class="overlay select_autocomplete">
 	<div class="input_autocomplete">
-		Recherche : <input class="search_autocomplete" type="text"/>
-		<input type="button" value="Valider" onclick="javascript: addAutocompleteElement(this, '{$origin}', true)"/>
-		<input type="button" value="Annuler" onclick="javascript: addAutocompleteElement(this, '{$origin}', false)"/>
+		{$search} : <input class="search_autocomplete" type="text"/>
+		<input type="button" value="{$validate}" onclick="javascript: addAutocompleteElement(this, '{$origin}', true)"/>
+		<input type="button" value="{$cancel}" onclick="javascript: addAutocompleteElement(this, '{$origin}', false)"/>
 	</div>
 </div>
 <script type="text/javascript">$(function() {setupAutocompleteSelect('{$origin}', '{$url}')})</script>
 FORM;
 
 		$minAutocompleteSearch = SSO_MIN_AUTOCOMPLETE_CHARACTERS;
-		
+
+		$chooseElement = L::label_choose_element;
+
 		$js=<<<JS
 function addAutocompleteElement(selected, origin, add) {
 
 	var origin=$('[name="'+origin+'"]');
 
 	var newValue = origin.data('old-selected');
-	
+
 	if (add)  {
 		var element=$(selected).parent('.input_autocomplete').find('.search_autocomplete');
 		var item = element.data('item');
 		if ((item == undefined) || (item.label != element[0].value)) {
 			return false;
 		}
-		
+
 		if (origin.find('option[value="'+item.value+'"]').length == 0) {
 			var last = origin.children('option[value="_select_autocomplete"]')
 			var chooseOption = '<'+'option value="'+item.value+'" title="">'+item.label+'<'+'/option>';
@@ -158,14 +190,15 @@ function addAutocompleteElement(selected, origin, add) {
 	origin.find(':selected').prop('selected', false);
 	origin.find('option[value="'+newValue+'"]').prop('selected', true);
 	origin.change();
-	
+
 	$(selected).closest('.overlay').hide();
 }
 
 function setupAutocompleteSelect(origin, url) {
 	var origin=$('[name="'+origin+'"]')
 	var last = origin.children('option').last();
-	var chooseOption = '<'+'option value="_select_autocomplete" title="">Choisir un élément...<'+'/option>';
+	var chooseOption = $('<'+'option value="_select_autocomplete" title=""><'+'/option>');
+	chooseOption.text('{$chooseElement}');
 	last.after(chooseOption);
 
 	origin.change(function() {
@@ -195,7 +228,7 @@ $(function() {
 		select: function(e, ui) {
 			if (ui.item.offset !== undefined) {
 				e.preventDefault();
-				
+
 				var that = $(this);
 				that.autocomplete('option', 'source', that.data('baseURL')+'&'+'offset='+ui.item.offset );
 
@@ -211,8 +244,7 @@ $(function() {
 });
 JS;
 		FormHelper::registerJavascript('autocompleteSelect', $js);
-		
+
 		return $result;
 	}
-	
 }

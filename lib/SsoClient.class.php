@@ -1,13 +1,28 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoClient class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\lib
+ */
+namespace sso;
 
 /**** Global configuration ****/
 $conf = implode(\DIRECTORY_SEPARATOR, array(__DIR__, '..', 'config', 'config.php'));
 if (file_exists($conf)) {
 	require_once($conf);
 } else {
+	// do not translate: I18n not loaded yet
 	echo 'Configuration file '.$conf.' does not exists';
 	die();
 }
+
+/**** Version file ****/
+include_once implode(\DIRECTORY_SEPARATOR, array(__DIR__, '..', 'version.php'));
+
+/**** Retrieve language ****/
+require_once implode(DIRECTORY_SEPARATOR, array(__DIR__, 'Locale.class.php'));
+Locale::init();
 
 /**** Load SALT ****/
 set_include_path(get_include_path().\PATH_SEPARATOR.SALT_PATH);
@@ -15,40 +30,77 @@ require_once('Salt.class.php');
 
 use salt\Salt;
 use salt\In;
+use salt\I18n;
 
 /**** Configure ****/
-define(__NAMESPACE__.'\SSO_RELATIVE', Salt::relativePath(1));
+/** Relative path of SSO */
+define('sso\SSO_RELATIVE', Salt::relativePath(1));
 
 Salt::config(); // SALT conf
 
 Salt::addClassFolder(SSO_RELATIVE.'lib', __NAMESPACE__);
 Salt::addClassFolder(SSO_RELATIVE.'plugins'); // not in SSO namespace
 
-/**** Main SSO class ****/
+$i18n = I18n::getInstance('SSO', SSO_RELATIVE);
+$i18n->init(SSO_CURRENT_LOCALE)->alias(__NAMESPACE__.'\L');
 
+/**
+ * Check all YAML locale files
+ */
+// $i18n->check(TRUE); die();
+/**
+ * Generate all locales classes
+ */
+// $i18n->generate(TRUE); die();
+
+/**
+ * Main SSO class
+ *
+ * Can by used by client application
+ */
 class SsoClient {
 
+	/** Auth status : OK */
 	const AUTH_OK = 10;
+	/** Auth status : session does not exists anymore */
 	const AUTH_KO_NO_SESSION = 11;
+	/** Auth status : IP check failed */
 	const AUTH_KO_IP = 20;
+	/** Auth status : User Agent check failed */
 	const AUTH_KO_AGENT = 21;
+	/** Auth status : session has expired */
 	const AUTH_KO_TIMEOUT = 30;
+	/** Auth status : error occured during application init */
 	const AUTH_KO_INIT_APP = 40;
+	/** Auth status : unknown error occured */
 	const AUTH_KO_UNKNOWN = 99;
 
+	/**
+	 * @var Session current session */
 	public $session;
+	/**
+	 * @var string current application path */
 	private $currentApplication = NULL;
+	/**
+	 * @var SsoClient current instance */
 	private static $instance = NULL;
 
+	/**
+	 * @var string[] all logout reason : int (self::AUTH_KO_*) => logout reason */
 	private static $logoutReasons = array(
-		self::AUTH_KO_AGENT => 'la session est invalide', 	// do not give too more informations 
-		self::AUTH_KO_IP => 'la session est invalide',		// do not give too more informations
-		self::AUTH_KO_NO_SESSION => 'la session n\'existe plus',
-		self::AUTH_KO_TIMEOUT => 'la session a expirée',
-		self::AUTH_KO_UNKNOWN => 'une erreur imprévue est survenue',
-		self::AUTH_KO_INIT_APP => 'une erreur est survenue lors de l\'authentification à une application',
+		self::AUTH_KO_AGENT => L::logout_reason_invalid, 	// do not give too more informations
+		self::AUTH_KO_IP => L::logout_reason_invalid,		// do not give too more informations
+		self::AUTH_KO_NO_SESSION => L::logout_reason_not_exists,
+		self::AUTH_KO_TIMEOUT => L::logout_reason_expire,
+		self::AUTH_KO_UNKNOWN => L::logout_reason_unknown,
+		self::AUTH_KO_INIT_APP =>  L::logout_reason_auth,
 	);
 
+	/**
+	 * Retrieve SsoClient instance
+	 * @param string $path web path of SSO. Needed for retrieve SSO from client application
+	 * @return SsoClient current instance
+	 */
 	public static function getInstance($path = NULL) {
 		if (self::$instance === NULL) {
 			if ($path !== NULL) {
@@ -62,23 +114,38 @@ class SsoClient {
 		}
 		return self::$instance;
 	}
-	
+
+	/**
+	 * Build a new SsoClient instance
+	 * @param string $path web path of SSO
+	 */
 	private function __construct($path = NULL) {
-		if (!defined(__NAMESPACE__.'\SESSION_PATH')) {
-			define(__NAMESPACE__.'\SESSION_PATH', session_save_path());
+		if (!defined('sso\SESSION_PATH')) {
+			/**
+			 * @ignore */
+			define('sso\SESSION_PATH', session_save_path());
 		}
-		if (!defined(__NAMESPACE__.'\SSO_WEB_RELATIVE')) {
-			define(__NAMESPACE__.'\SSO_WEB_RELATIVE', $path);
+		if (!defined('sso\SSO_WEB_RELATIVE')) {
+			/**
+			 * @ignore */
+			define('sso\SSO_WEB_RELATIVE', $path);
 		}
-		if (!defined(__NAMESPACE__.'\SSO_WEB_PATH')) {
+		if (!defined('sso\SSO_WEB_PATH')) {
 			$req = implode('/', (explode('/', $_SERVER['REQUEST_URI'], -1)));
 			$webPath = substr(Salt::computePath($req, $path), 0, -1);
-			define(__NAMESPACE__.'\SSO_WEB_PATH', $webPath);
+			/**
+			 * @ignore */
+			define('sso\SSO_WEB_PATH', $webPath);
 		}
 
 		$this->session = Session::getInstance();
 	}
 
+	/**
+	 * Retrieve the logout reason
+	 * @param int $reason self::AUTH_KO_*
+	 * @return string logout reason
+	 */
 	public static function getLogoutReason($reason) {
 		if (!array_key_exists($reason, self::$logoutReasons)) {
 			$reason = self::AUTH_KO_UNKNOWN;
@@ -86,6 +153,15 @@ class SsoClient {
 		return self::$logoutReasons[$reason];
 	}
 
+	/**
+	 * Check user is logged.
+	 *
+	 * Redirect user to login page if not.
+	 *
+	 * @param boolean $authOnly TRUE for do not check credentials
+	 * @param string $fromURL URL application to redirect after login
+	 * @return AuthUser return current user if logged, redirect to sso otherwise
+	 */
 	public function auth($authOnly = FALSE, $fromURL = NULL) {
 
 		$Input = In::getInstance();
@@ -103,10 +179,10 @@ class SsoClient {
 			}
 			$fromURL = \salt\first($data);
 		}
-		
-		$this->session->SSO_REDIRECT = \salt\first(explode('?', $fromURL, 2));
-		$this->session->SSO_GET = $params;
-		
+		if (!$authOnly) {
+			$this->session->SSO_REDIRECT = \salt\first(explode('?', $fromURL, 2));
+			$this->session->SSO_GET = $params;
+		}
 		if ($state !== self::AUTH_OK) {
 			header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.$state, true, 303);
 			die();
@@ -126,20 +202,22 @@ class SsoClient {
 				$this->initApplication();
 			} catch (\Exception $ex) {
 				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP, true, 303);
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout&reason='.self::AUTH_KO_INIT_APP, true, 303);
 				die();
 			}
 		}
+
+		return $this->getUser();
 	}
 
 	/**
 	 * Check a fullpath is a subpath of a basepath
-	 * 
+	 *
 	 * Examples : <br/>
 	 * /a/b/c is a subpath of /a/b<br/>
 	 * /a/b is a subpath of /a/b<br/>
 	 * /a/bc is NOT a subpath of /a/b<br/>
-	 * 
+	 *
 	 * @param string $fullPath full path to check
 	 * @param string $basePath the base path the full path have to begin with
 	 * @return TRUE if $fullPath start with $basePath and match exactly for last path element.
@@ -150,19 +228,24 @@ class SsoClient {
 			&& (strlen($fullPath) === strlen($basePath)
 			|| substr($fullPath, strlen($basePath), 1)==='/'));
 	}
-	
+
+	/**
+	 * Check current page is a SSO page
+	 * @return boolean TRUE if it's an SSO page
+	 */
 	private function isSsoPage() {
 		$Input = In::getInstance();
-		
+
 		$req = $Input->S->RAW->REQUEST_URI;
 		return $this->isSubPath($req, SSO_WEB_PATH);
 
 		return FALSE;
 	}
-	
+
 	/**
-	 * @param string $appli
-	 * @return Handler
+	 * Retrieve handler for application (or current application)
+	 * @param string $appli application path, or NULL for use current application
+	 * @return Handler the Handler instance for this application. Can be NULL
 	 */
 	protected function getClientHandler($appli = NULL) {
 		if ($appli === NULL) {
@@ -174,7 +257,13 @@ class SsoClient {
 		}
 		return NULL;
 	}
-	
+
+	/**
+	 * Initialize an application Handler
+	 * @param string $handler handler class name
+	 * @param string $appli application path
+	 * @return Handler instance
+	 */
 	protected function loadClientHandler($handler, $appli) {
 		if (($handler !== NULL) && !empty($handler)) {
 			$h = new $handler();
@@ -183,7 +272,11 @@ class SsoClient {
 		}
 		return NULL;
 	}
-	
+
+	/**
+	 * Try to init a client application
+	 * @throws Exception if something go wrong during init
+	 */
 	private function initApplication() {
 		$handler = $this->getClientHandler();
 		if ($handler !== NULL) {
@@ -201,18 +294,33 @@ class SsoClient {
 		}
 	}
 
+	/**
+	 * Redirect to login page when error occured during client init
+	 * @param int $code error code
+	 * @param string $message error message
+	 * @param string $file file name
+	 * @param int $line line number
+	 */
 	public function clientError($code, $message, $file, $line) {
 		$Input = In::getInstance();
 		error_log('SSO APP INIT ERROR: '.$message.' ('.$file.':'.$line.')');
-		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout=1&reason='.self::AUTH_KO_INIT_APP, true, 303);
+		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout&reason='.self::AUTH_KO_INIT_APP, true, 303);
 		die();
-		
+
 	}
-	
+
+	/**
+	 * Redirect to login page when exception occured during client init
+	 * @param Exception $ex the exception
+	 */
 	public function clientException($ex) {
 		$this->clientError(0, $ex->getMessage);
 	}
-	
+
+	/**
+	 * Check session validity
+	 * @return int status of session : self::AUTH_*
+	 */
 	private function checkUserAuth() {
 		$Input = In::getInstance();
 
@@ -235,11 +343,13 @@ class SsoClient {
 		}
 
 		if (($this->session->SSO_checkIP) && ($Input->S->RAW->REMOTE_ADDR !== $this->session->SSO_lastIP)) {
+			// error log only : do not translate
 			error_log('SSO - '.$this->session->SSO_LOGIN.' - Bad IP address. Destroy session ('.__FILE__.':'.__LINE__.')');
 			$this->session->logout();
 			return self::AUTH_KO_IP;
 		}
 		if (($this->session->SSO_checkAgent) && ($Input->S->RAW->HTTP_USER_AGENT != $this->session->SSO_lastAgent)) {
+			// error log only : do not translate
 			error_log('SSO - '.$this->session->SSO_LOGIN.' - Bad User Agent. Destroy session ('.__FILE__.':'.__LINE__.')');
 			$this->session->logout();
 			return self::AUTH_KO_AGENT;
@@ -250,26 +360,42 @@ class SsoClient {
 		return self::AUTH_OK;
 	}
 
+	/**
+	 * Check user is SSO Admin
+	 * @return boolean TRUE if logged user is an SSO admin
+	 */
 	public function isSsoAdmin() {
 		return $this->session->SSO_ADMIN;
 	}
-	
+
+	/**
+	 * Check user is logged
+	 * @return boolean TRUE if user is logged and enabled
+	 */
 	public function isLogged() {
-		return ($this->getLogin() !== NULL) 
+		return ($this->getLogin() !== NULL)
 		&& ($this->getUser()->getState() === SsoUser::STATE_ENABLED);
 	}
 
+	/**
+	 * Check user can access to an application path
+	 *
+	 * currentApplication became $appli if user have access
+	 *
+	 * @param string $appli application path
+	 * @return boolean TRUE if user can access to this application, FALSE otherwise
+	 */
 	protected function checkCredentials($appli) {
 		$applis = $this->session->SSO_CREDENTIALS;
-		
-		$appli2 = NULL;
+
+		// remove protocol if needed
 		if (strpos($appli, '://') !== FALSE) {
-			$appli2 = '/'.\salt\last(explode('/', \salt\last(explode('://', $appli, 2)), 2));
+			$appli = '/'.\salt\last(explode('/', \salt\last(explode('://', $appli, 2)), 2));
 		}
 
 		if (($applis !== NULL) && ($appli !== NULL)) {
 			foreach($applis as $app => $handler) {
-				if ($this->isSubPath($appli, $app) || $this->isSubPath($appli2, $app)) {
+				if ($this->isSubPath($appli, $app)) {
 					$this->currentApplication = $app;
 					return TRUE;
 				}
@@ -279,6 +405,10 @@ class SsoClient {
 		return FALSE;
 	}
 
+	/**
+	 * Retrieve login user name
+	 * @return string login user name
+	 */
 	public function getLogin() {
 		if (isset($this->session->SSO_LOGIN)) {
 			return $this->session->SSO_LOGIN;
@@ -286,16 +416,23 @@ class SsoClient {
 		return NULL;
 	}
 
+	/**
+	 * Retrieve AuthUser
+	 * @return AuthUser the AuthUser returned by an auth method
+	 */
 	public function getUser() {
 		if (isset($this->session->SSO_USER)) {
 			return $this->session->SSO_USER;
 		}
 		return NULL;
 	}
-	
 
+	/**
+	 * Retrieve user name
+	 * @return string user name for display
+	 */
 	public function getUserName() {
-		$name = ''; 
+		$name = '';
 		if (isset($this->session->SSO_USERNAME)) {
 			$name = $this->session->SSO_USERNAME;
 		}
@@ -305,12 +442,17 @@ class SsoClient {
 		return $name;
 	}
 
+	/**
+	 * Retrieve an ID that identify the SSO menu (for handle browser cache)
+	 * @param boolean $hidden TRUE for do not display menu
+	 * @return string an ID prefixed by destination : application=ID
+	 */
 	private function getMenuId($hidden = FALSE) {
 		if (!$this->isLogged() || ($hidden)) {
 			return '';
 		}
 		$profil = SsoProfil::getCurrent($this);
-		
+
 		$theme = $profil->getThemeObject();
 		$options = $theme->getOptions();
 		$Input = In::getInstance();
@@ -321,21 +463,35 @@ class SsoClient {
 		if (strpos($Input->S->RAW->REQUEST_URI, SSO_WEB_PATH) === 0) {
 			$id = 'sso'; // different URL on SSO because SSO do not use global theme
 		}
-		$id.= '='.md5($profil->theme.json_encode($options));
-		
+		if (SsoProfil::isPreview()) {
+			$id = SsoProfil::PREVIEW_KEY;
+		}
+
+		$hash = md5($profil->theme.json_encode($options));
+		$hash = base_convert($hash, 16, 36); // shorten the hash
+		$id.= '='.$hash;
+
 		return $id;
 	}
-	
+
+	/**
+	 * Return HTML link tag for CSS SSO menu
+	 * @param boolean $hidden TRUE for do not display menu
+	 */
 	public function displayMenuCssHeader($hidden = FALSE) {
 		$id= $this->getMenuId($hidden);
 		if ($id === '') {
 			return;
 		}
-		
+
 		// id value is for browser cache : using a different URL for each theme/options force browser to not use a cache file
 		echo '<link href="'.SSO_WEB_RELATIVE.'css/sso_menu.css.php?'.$id.'" rel="stylesheet" type="text/css" />';
 	}
 
+	/**
+	 * display the SSO menu
+	 * @param boolean $hidden TRUE for do not display menu
+	 */
 	public function displayMenu($hidden = FALSE) {
 		if ($hidden) {
 			return;
@@ -343,12 +499,16 @@ class SsoClient {
 		$_sso = $this; // for visibility in included page
 		include(SSO_RELATIVE.'pages/menu.php');
 	}
-	
+
+	/**
+	 * Display the SSO menu in page without the CSS in header.
+	 *
+	 * CSS will be added by javascript during page load
+	 */
 	public function displayFullMenuAfterBody() {
 		ob_start();
 		$this->displayMenuCssHeader();
-		$link = explode(' ', ob_get_contents());
-		ob_end_clean();
+		$link = explode(' ', ob_get_clean());
 		foreach($link as $attr) {
 			$attr = explode('=', $attr, 2);
 			if ($attr[0] === 'href') {
@@ -371,6 +531,13 @@ class SsoClient {
 JS;
 	}
 
+	/**
+	 * Register variables in session
+	 *
+	 * Variables will be restored at each page in global variables
+	 *
+	 * @param mixed[] variableName => variableValue
+	 */
 	public function registerGlobals($variables) {
 		$this->session->SSO_GLOBALS = $variables;
 		foreach($this->session->SSO_GLOBALS as $name => $value) {
@@ -378,14 +545,18 @@ JS;
 			${$name} = $value;
 		}
 	}
-	
+
+	/**
+	 * SSO pages list
+	 * @return string[] key => text
+	 */
 	public function pagesList() {
 		return array(
-			'' => 'Identification',
-			'init' => 'Initialisation',
-			'settings' => 'Profil',
-			'admin' => 'Administration',
-			'apps' => 'Applications',
+			'' => L::menu_login,
+			'init' => L::menu_init,
+			'settings' => L::menu_profile,
+			'admin' => L::menu_admin,
+			'apps' => L::menu_applications,
 		);
 	}
 

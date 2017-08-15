@@ -1,4 +1,12 @@
-<?php namespace sso;
+<?php
+/**
+ * main include file
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\lib
+ */
+namespace sso;
+
 error_reporting(\E_ALL);
 
 require_once(__DIR__.\DIRECTORY_SEPARATOR.'SsoClient.class.php');
@@ -37,7 +45,7 @@ if ($Input->G->ISSET->page) {
 		$pageId = array_shift($ids);
 
 		if (!is_array($pages)) {
-			throw new BusinessException('La page demandée ['.$Input->G->HTML->page.'] ne fait pas partie des pages autorisées.');
+			throw new BusinessException(L::error_page_forbidden($Input->G->HTML->page));
 			$page=NULL;
 			break;
 		}
@@ -47,12 +55,12 @@ if ($Input->G->ISSET->page) {
 				$pageId = '_'.$pageId;
 			} else {
 				// Access to internal page without ID ? forbidden
-				throw new BusinessException('Le paramètre id est obligatoire pour accéder à la page '.$Input->G->HTML->page);
+				throw new BusinessException(L::error_page_id_missing($Input->G->HTML->page));
 			}
 		}
 
 		if (!array_key_exists($pageId, $pages)) {
-			throw new BusinessException('La page demandée ['.$Input->G->HTML->page.'] ne fait pas partie des pages autorisées.');
+			throw new BusinessException(L::error_page_forbidden($Input->G->HTML->page));
 			$page=NULL;
 			break;
 		} else {
@@ -72,4 +80,5 @@ if (($page !== NULL) && ($page !== 'init')) { // we need to be auth before acces
 	$sso->auth(TRUE);
 }
 
-define(__NAMESPACE__.'\SSO_TITLE', $titre);
+/** SSO page title */
+define('sso\SSO_TITLE', $titre);

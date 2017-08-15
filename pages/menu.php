@@ -1,7 +1,14 @@
-<?php namespace sso;
+<?php
+/**
+ * display menu
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
 if ($_sso->isLogged()) {
 	$_Input = \salt\In::getInstance();
-	
+
 	$_req = $_Input->S->RAW->REQUEST_URI;
 	$_req = \salt\first(explode('?', $_req, 2));
 
@@ -16,24 +23,24 @@ if ($_sso->isLogged()) {
 	} else if (isset($_sso->session->SSO_RETURN_URL)) { // we are NOT on a SSO page
 		$_sso->session->SSO_RETURN_URL = NULL; // we clean the return URL
 	}
-	
+
 	$_pages = $_sso->pagesList();
-	
+
 	$links = array();
 	if (isset($_sso->session->SSO_RETURN_URL)) {
-		$links[]=array($_sso->session->SSO_RETURN_URL, 'Retour', array('title' => 'Retour à la dernière page d\'application consultée'));
+		$links[]=array($_sso->session->SSO_RETURN_URL, L::menu_return, array('title' => L::menu_return_last_page));
 		$links[]=NULL;
 	}
 	$links[]=array(SSO_WEB_RELATIVE.'?page=apps', $_pages['apps']);
 	$links[]=array(SSO_WEB_RELATIVE.'?page=settings', $_pages['settings']);
-	
+
 	if ($_sso->isSsoAdmin()) {
 		$links[]=NULL;
 		$links[]=array(SSO_WEB_RELATIVE.'?page=admin', $_pages['admin']);
 	}
-	
+
 	$links[]=NULL;
-	$links[]=array(SSO_WEB_RELATIVE.'?sso_logout=1', 'Se déconnecter');
+	$links[]=array(SSO_WEB_RELATIVE.'?sso_logout', L::menu_logout);
 ?>
 <div id="sso_menu_container">
 	<div id="sso_menu">
@@ -41,7 +48,7 @@ if ($_sso->isLogged()) {
 		<ul>
 <?php foreach($links as $link) {
 		if ($link === NULL) {?>
-			<li class="separator"><hr/></li> 
+			<li class="separator"><hr/></li>
 <?php 	} else {
 			$url = array_shift($link);
 			$text = array_shift($link);
@@ -58,5 +65,5 @@ if ($_sso->isLogged()) {
 		</ul>
 	</div>
 </div>
-<?php 
+<?php
 } // not logged = no menu ?>

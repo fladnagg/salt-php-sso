@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * display bottom page
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages\layout
+ */
+namespace sso;
 
 use salt\Benchmark;
 
@@ -6,7 +13,7 @@ include(SSO_RELATIVE.'pages/layout/errors.php'); ?>
 <div class="footer">
 <?php if (ini_get('display_errors') || $sso->isSsoAdmin()) { ?>
 	<table class="footer benchmark hidden">
-		<tr><th>Compteurs</th><th>Temps</th></tr>
+		<tr><th><?= $Input->HTML(L::label_counters) ?></th><th><?= $Input->HTML(L::label_time) ?></th></tr>
 		<tr>
 			<td>
 <?php Benchmark::stop('page'); Benchmark::start('page'); // for update time and display it below ?>
@@ -16,7 +23,7 @@ include(SSO_RELATIVE.'pages/layout/errors.php'); ?>
 			</td>
 			<td>
 <?php foreach(Benchmark::getAllTimes() as $k => $v) { ?>
-				<?= $Input->HTML($k)?>: <?= $Input->HTML(round($v, \salt\BENCH_PRECISION))?>ms<br/>
+				<?= $Input->HTML($k)?>: <?= $Input->HTML(round($v, \salt\BENCH_PRECISION))?>s<br/>
 <?php }?>
 			</td>
 		</tr>
@@ -44,10 +51,10 @@ include(SSO_RELATIVE.'pages/layout/errors.php'); ?>
 	</table>
 <?php }?>
 	<div onclick="javascript:$('table.benchmark').toggle();">
-			Page générée en <?= round(Benchmark::end('page'), \salt\BENCH_PRECISION) ?> ms
+			<?= $Input->HTML(L::label_page_generated(VERSION, round(Benchmark::end('page'), \salt\BENCH_PRECISION))) ?>
 	</div>
 <?php } else { ?>
-	Page générée en <?= round(Benchmark::end('page'), \salt\BENCH_PRECISION) ?> ms
+	<?= $Input->HTML(L::label_page_generated(VERSION, round(Benchmark::end('page'), \salt\BENCH_PRECISION))) ?>
 <?php } ?>
 </div>
 </body>

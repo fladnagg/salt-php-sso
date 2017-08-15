@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * main page
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso
+ */
+namespace sso;
 
 include('lib/base.php');
 
@@ -6,7 +13,7 @@ use salt\DBHelper;
 
 if ($page === NULL) {
 	$page = \salt\first(explode('&', $Input->S->RAW->QUERY_STRING, 2));
-	if (strpos($page, '=') !== FALSE) {
+	if ((strpos($page, '=') !== FALSE) || ($page === 'sso_logout')) {
 		$page = NULL;
 	}
 }
@@ -23,7 +30,7 @@ if (file_exists($file)) {
 	include_once($file);
 	ob_end_flush();
 } else {
-	ErrorHandler::addError('La page demandée n\'existe pas !');
+	ErrorHandler::addError(L::error_page_not_exists);
 }
 
 DBHelper::checkAllTransactionsEnded();

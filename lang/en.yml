@@ -1,0 +1,379 @@
+error:
+  title: ERROR
+  technical: Technical error
+  bad_password: Bad password.
+  database_not_responding: Unable to reach database %s:%s.
+  ldap_not_responding: Unable to reach LDAP %s:%s.
+  ldap_connect: Unable to connect to LDAP %s:%s.
+  # (%s) is the error returned by LDAP
+  ldap_bind: Unable to connect to LDAP %s:%s with DN and password (%s).
+  ldap_search: Error during search user in LDAP (%s).
+  ldap_browse: Error during browse user in LDAP (%s).
+
+  session:
+    header_sent: Cannot start SSO session because HTTP headers already sent at %s:%s
+
+  db:
+    label: Database
+    query: Query execution
+    connection: Connection
+    syntax: Syntax
+    data: Data
+
+  app:
+    path_missing: Application path is missing.
+    not_exists: "The application %s does not exists."
+    image_not_exists: "The image %s does not exists."
+  credential:
+    user_missing: An user or an user group is required.
+    app_missing: An application or an application group is required.
+
+  theme_unknown: "Unknown theme : %s."
+
+  auth:
+    delete_local: Cannot delete local authentication method.
+    delete_used: Cannot delete authentication method %s because %s user(s) still use it.
+  
+  group:
+    delete_used: Cannot delete group %s because %s credential(s) still use it.
+    disable_used: Cannot disable type(s) %s for the group %s because this group contains %s element(s) of theses type(s).
+
+  user:
+    id_missing: User ID is missing.
+    delete_current: Cannot remove current user.
+    admin_current: Cannot remove current user administrator rights.
+    state_current: Cannot change current user state.
+    password_db_user: Cannot change password for database user.
+    password_mismatch: Password mismatch.
+
+  object_has_error: "%s has an error : %s."
+  
+  logout_with_reason: You have been logout because %s.
+  user_missing: User missing.
+  user_state:
+    disabled: |
+      Your account [%s] is disabled.
+      You have to ask an administrator to enable it.
+    pending: |
+      Your account [%s] is pending administrator validation.
+      Please try again later.
+  login: User or password is incorrect.
+  page:
+    access: You cannot access to this page.
+    not_exists: Page does not exists !
+    forbidden: The page [%s] is not allowed.
+    id_missing: id parameter is mandatory for the page %s.
+
+  admin:
+    added: "Cannot add the new object : %s."
+    delete_missing: Cannot find the object to delete.
+    delete: "Cannot delete the object : %s."
+    save: "Cannot save changes : %s."
+
+  ask:
+    exists: There is already a request or an access for this application.
+    not_exists: Cannot find the request to modify.
+    other_user: Only current user requests can be modified.
+
+  theme:
+    not_recommended: Selected theme cannot be a recommended theme.
+    invalid: Selected theme invalid.
+
+  app:
+    auth: An error occured during application authentication.
+    forbidden: |
+      You have been redirect here because you did not access to application %s.
+      Please choose another application below.
+
+  login_user_unknown: Unknown user [%s].
+  login_bad_password: Bad password for [%s].
+
+field:
+  id: ID
+  selected: Selected
+  # Appli + AuthMethod + Group + User
+  name: Name
+  # AuthMethod + Group
+  default: By default
+  # AuthMethod + GroupElement
+  type: Type
+  # Credential + Profil
+  user: User
+  application: Application
+  # VisibleTheme
+  userBgColor: User block background color
+  userColor: User block text color
+  menuBgColor: Menu block background color
+  menuColor: Menu block text color
+  menuBgHover: Menu hover background color
+  menuHover: Menu hover text color
+  visible: Always visible
+  # User
+  password: Password
+  confirm_password: Confirm password
+  auth_method: Authentication method
+  auth_methods: Authentication methods
+  language: Language
+  admin: Administrator
+  restrict_ip: Check IP
+  restrict_agent: Check User-Agent
+  session_duration: Session duration
+  last_login: Last access
+  login_count: Number of access
+  last_failed_login: Last failed access
+  failed_login_count: Number of failed access
+  state: State
+  # Profil
+  theme: Theme
+  enabled: Enabled
+  options: Options
+  # GroupElement
+  ref_id: Ref ID
+  group_id: Group ID
+  # Group
+  types: Types
+  # Credential
+  appli_group: Applications group
+  user_group: Users group
+  status: Status
+  description: Description
+  # AuthMethod
+  create_on_fly: Create on the fly
+  parameters: Parameters
+  # Appli
+  path: Path
+  handler: Handler
+  image: Image (64x64)
+  # AuthMethodDatabase + AuthMethodLdap
+  host: Host
+  port: Port
+  field_id: ID field
+  field_name: Name field
+  # AuthMethodDatabase
+  database: Database
+  db_user: User
+  db_password: Password
+  authQuery: Check request
+  dataQuery: Data request
+  # AuthMethodClass
+  class_name: Class name
+  # AuthMethodLdap
+  bind_dn: Connection account
+  bind_pass: Password
+  dn: Base DN
+
+logout_reason:
+  invalid: session is invalid
+  not_exists: session does not exists anymore
+  expire: session has expired
+  unknown: an error occured
+  auth: an error occured during application authentication
+
+auth_type:
+  local: LOCAL
+  ldap: Ldap
+  db: Database
+  class: Class
+
+credential_status:
+  asked: Asked
+  refused: Refused
+  validated: Validated
+
+admin:
+  user: Users
+  appli: Applications
+  auth: Authentication methods
+  credential: Credentials
+  group: Groups
+  language: Languages
+
+group_type:
+  user: Users
+  appli: Applications
+  auth: Authentications
+
+user_state:
+  enabled: Enabled
+  disabled: Disabled
+  pending: Pending validation
+
+app_menu:
+  list: Allowed applications
+  ask: Access requests
+
+all: All
+yes: "Yes"
+no: "No"
+
+help:
+  click_for_display: Click for display help
+  click_for_hide: Click for hide help
+  db:
+    authQuery: Query will return at least one row if user exists and password is valid. Placeholders :user and :password have to be used.
+    dataQuery: Query will return one row that match the user. Placeholder :user have to be used. Fields have to contains [ID field] and [Name field].
+    field_id: Name of the field that contain the unique ID of the user returned by data request.
+    field_name: Name of the field that contain the name of the user returned by data request.
+  ldap:
+    field_id: Name of the field that contain the unique ID of the user returned by the LDAP.
+    field_name: Name of the field that contain the name of the user returned by the LDAP.
+  appli:
+    path: From web server root.
+    handler: Classes in "plugins" folder and that implements sso\Handler.
+    icon: |
+      From application root.
+      Will be displayed in SSO application list.
+  auth:
+    default: Will be used in alphabetical order if no authentication method is set for a user.
+    create: A new user authenticated from this method will be dynamically created in the SSO. Otherwise, the user will still be created, but without access and his account will require validation by administrator.
+  ask: You can ask why you want an access in "Description" field
+  user:
+    check_ip: >
+      At each access, we will check that the IP address of the user is the same that the IP address used during login. 
+      It's a protection agains session hijacking, but you don't have to use it if you or your ISP use proxy because your IP address can change anytime. 
+    check_agent: >
+      At each access, we will check that the User Agent (ie, a string that represent your browser) is the same that the User Agent used during login.
+      It's a protection agains session hijacking because User Agent does not change, but many users have the same and it's not a private data : it's send to every website.
+    session_duration: If there is no activities during this time, we will ask you to login again. If you choose a 0 duration, the session will expire when browser close.
+    password_locale: The password is required only for the authentication type "%s".
+
+  group:
+    type: Allow groups for this type.
+    default: New elements of this type will be added to this group automatically.
+  
+button:
+  add: Add
+  delete: Delete
+  send: Send
+  modify: Modify
+  validate: Validate
+  cancel: Cancel
+  filter: Filter
+  save: Save
+  modify_group: Modify group
+  new_request: New request
+  ask_again: Ask again
+  load_theme_options: Load theme options
+  preview: Preview
+  load: Load
+  check: Check
+
+pagination:
+  results: "%s result(s)"
+  pages: "Page : %s / %s"
+  goto: Go to page
+  previous: Previous
+  next: Next
+
+menu:
+  login: Login
+  init: Initialization
+  profile: Profil
+  admin: Administration
+  applications: Applications
+  return_last_page: Back to last application page
+  return: Back
+  logout: Logout
+
+label:
+  pages_title: SSO
+  welcome_login_text: Please login
+  restrict_login_to_session: Restrict connection to session
+  public_computer: Public computer
+  modify_parameters_of: Modify parameters of %s
+  search: Searche
+  choose_element: Choose an element...
+  in_group: Belong to group
+  search_criteria: Search criteria
+  group: Group
+  actions: Actions
+  access_list: Allowed applications list
+  # footer
+  counters: Counters
+  time: Time
+  page_generated: SSO v%s - Page generated in %s s
+
+  admin:
+    title: SSO Administration
+    list_element: "%s list"
+    modify_group_elements: Modify "%s" group elements
+    no_type_for_group: No type enabled for this group
+    added: "%s has been added."
+    added_default: The new element has been added to default groups.
+    deleted: "%s has been removed."
+    modified: "%s has been changed."
+    add_groups: "%s has been added to %s group(s)."
+    remove_groups: "%s has been removed from %s group(s)."
+    group_added: "%s element(s) has been added to group."
+    group_removed: "%s element(s) has been removed from group."
+    other_object_fields: Other fields of object %s
+    modify_other_fields: Modify other fields of object %s
+    enabled: Enabled
+    enabled_for: Enabled for
+    lang:
+      check: Check languages files
+      generate: Build languages classes
+      generate_confirm: |
+        Build languages classes again ?
+        You have to do this only when languages files have changed AND the active mode is "Generated"
+      current: Current language is "%s"
+      default: Default language is "%s"
+      mode:
+        type: "Active mode :"
+        auto: Automatic - Languages classes are build automatically when languages files changed (default mode).
+        generated: Generated - Languages classes are manually generated and used directly. (I18n initialized with I18n::MODE_USE_GENERATED).
+
+  ask:
+    title: Request access for another application
+    added: Request added.
+    deleted: Request has been removed.
+    revived: Request has been asked again.
+    all_access: You have access to all available applications.
+
+  theme:
+    title: Change profil for application %s
+    save_recommended: Theme [%s] has been saved as recommended theme for application [%s].
+    active_recommended: Recommended theme has been activated for application [%s].
+    active: Theme [%s] has been activated for application [%s].
+    no_options: This theme does not have options
+    recommended: Recommended theme (administrators only)
+    use_recommended: User recommended profil
+    description:
+      hidden: This theme does not display visible menu in client application.
+      menu: A vertical drop down menu at page corner.
+      mobile: A vertical hidden menu at page border will show up at hover.
+      recommended: This theme will use the administrator defined recommended theme for this application.
+      topbar: A fixed horizontal menu at the top of the page.
+    position:
+      field: Position
+      top_left: Top left
+      top_right: Top right
+      bottom_right: Bottom right
+      bottom_left: Bottom left
+      left: Left
+      right: Right
+    offset: Offset (pixels)
+    background_color: Background color
+    connected_as: "Connected as : "
+
+  app:
+    title: SSO applications for user %s
+
+  init:
+    title: SSO initilization
+    message: |
+      The SSO is not initialized.
+      Before initialize, please enter the database password.
+    success: |
+      Initialization successfull.
+      A user has been created with the login and the password of the database.
+    goto_configuration: SSO configuration
+  
+  setting:
+    title: SSO account for %s
+    change_after_next_login: Changes has been made and will be used at next login.
+    language_change_next_page: The language will be changed at next page.
+    main_options: General options
+    security_options: Security options 
+    statistics: Statistics
+    

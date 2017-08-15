@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * display administration page
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
 
 use salt\DeleteQuery;
 use salt\Field;
@@ -12,19 +19,25 @@ use salt\ViewControl;
 
 if (!$sso->isSsoAdmin()) {
 	header($Input->S->RAW->SERVER_PROTOCOL.' 403 Forbidden', TRUE, 403);
-	echo "<div class=\"errors\">Vous n'avez pas le droit d'accéder à cette page</div>";
+	echo '<div class="errors">'.$Input->HTML(L::error_page_access).'</div>';
 	die();
 }
 
 $SUBPAGES=array(
-		'users'  => new SsoUserAdmin(),
-		'applis' => new SsoAppliAdmin(),
-		'auths' => new SsoAuthMethodAdmin(),
-		'credentials' => new SsoCredentialAdmin(),
-		'groups' => new SsoGroupAdmin(),
+	'users'  => new SsoUserAdmin(),
+	'applis' => new SsoAppliAdmin(),
+	'auths' => new SsoAuthMethodAdmin(),
+	'credentials' => new SsoCredentialAdmin(),
+	'groups' => new SsoGroupAdmin(),
+	'lang' => L::admin_language,
 );
 
 $subpage=$Input->G->RAW->subpage;
+
+if (!isset($SUBPAGES[$subpage])) {
+	$subpage = NULL;
+}
+
 if ($subpage === NULL) {
 	$subpage = \salt\first(array_keys($SUBPAGES));
 }
@@ -38,8 +51,7 @@ if ($type === NULL) {
 	$type = \salt\first(array_keys($SUBPAGES));
 }
 
-
-$groupable = ($SUBPAGES[$subpage]->object instanceof SsoGroupable);
+$groupable = is_object($SUBPAGES[$subpage]) && ($SUBPAGES[$subpage]->object instanceof SsoGroupable);
 $pagination = new Pagination($Input->G->RAW->offset);
 
 $searchFields = array();
@@ -59,12 +71,12 @@ if ($Input->P->ISSET->add) {
 	$datas = $Input->P->RAW->new;
 
 	$groups = array();
-	
+
 	$obj = $SUBPAGES[$subpage]->createFrom($Input->P->RAW->new);
-		
+
 	$msgOks=array_merge($msgOks, $SUBPAGES[$subpage]->messages);
 	$msgErrors=array_merge($msgErrors, $SUBPAGES[$subpage]->errors);
-		
+
 	if ((count($msgErrors) === 0) && ($obj !== NULL)) {
 		$DB->beginTransaction();
 		try {
@@ -76,70 +88,62 @@ if ($Input->P->ISSET->add) {
 				$obj->id = $id;
 			}
 
-			if ($SUBPAGES[$subpage]->isFemaleName()) {
-				$msgOks[] = $SUBPAGES[$subpage]->displayName($obj).' a été ajoutée';
-			} else {
-				$msgOks[] = $SUBPAGES[$subpage]->displayName($obj).' a été ajouté';
-			}
+			$msgOks[] = L::label_admin_added($SUBPAGES[$subpage]->displayName($obj));
 
 			if ($obj instanceof SsoGroupable) {
 				$defaultGroups = SsoGroup::getDefaultsGroupElements($obj);
 				if (count($defaultGroups) > 0) {
 					$q = new InsertQuery($defaultGroups);
 					$DB->execInsert($q);
-					
-					$msgOks[]='Le nouvel élément a été ajouté aux groupes par défaut';
+
+					$msgOks[]= L::label_admin_added_default;
 				}
 			}
 
 			$DB->commit();
-			
+
 			$Input->P->SET->new = NULL; // if all is ok, clear input fields
-			
+
 		} catch (\Exception $ex) {
 			$DB->rollback();
 			$msgOks = array();
-			$msgErrors[]='Impossible d\'ajouter le nouvel objet : '.$ex->getMessage();
+			$msgErrors[]= L::error_admin_added($ex->getMessage());
 		}
 	} // no errors
 
 } else if ($Input->P->ISSET->delete) {
 	$id = \salt\first(array_keys($Input->P->RAW->delete));
-	
+
 	$obj = $SUBPAGES[$subpage]->object->getById($DB, $id);
-	
+
 	if ($obj === NULL) {
-		$msgErrors[]='Impossible de retrouver l\'objet à supprimer';
+		$msgErrors[]=L::error_admin_delete_missing;
 	} else {
 		$otherDeletes = $SUBPAGES[$subpage]->relatedObjectsDeleteQueries($obj);
-		
+
 		$msgOks=array_merge($msgOks, $SUBPAGES[$subpage]->messages);
 		$msgErrors=array_merge($msgErrors, $SUBPAGES[$subpage]->errors);
 	}
 	if (count($msgErrors) === 0) {
 		$DB->beginTransaction();
 		try {
-			if ($SUBPAGES[$subpage]->isFemaleName()) {
-				$msgOks[] = $SUBPAGES[$subpage]->displayName($obj).' a été supprimée';
-			} else {
-				$msgOks[] = $SUBPAGES[$subpage]->displayName($obj).' a été supprimé';
-			}
-	
+			$msgOks[] = L::label_admin_deleted($SUBPAGES[$subpage]->displayName($obj));
+
 			$obj->delete();
 			$DB->execDelete(new DeleteQuery($obj));
-				
+
 			foreach($otherDeletes as $delete) {
 				$DB->execDelete($delete);
 			}
-				
+
 			$DB->commit();
-				
+
 			$sso->refreshUser();
-			
+
 		} catch (\Exception $ex) {
 			$DB->rollback();
 			$msgOks = array();
-			$msgErrors[]='Impossible de supprimer l\'objet : '.$ex->getMessage();
+			$msgErrors[] = L::error_admin_delete($ex->getMessage());
 		}
 	} // no errors
 
@@ -157,12 +161,12 @@ if ($Input->P->ISSET->add) {
 		}
 
 		$groups=array();
-		
-		
+
+
 		$modifiedObjects = array();
-		
+
 		$changedGroups = array();
-		
+
 		foreach($datas as $id => $values) {
 			if (!isset($objects[$id])) {
 				continue; // removed by another user
@@ -179,7 +183,7 @@ if ($Input->P->ISSET->add) {
 							'ADD' => array(),
 							'DELETE' => array());
 				}
-			
+
 				if (isset($values[SsoGroupable::WITH_GROUP])) {
 					// add to group
 					$groups['ADD'][] = $id;
@@ -190,25 +194,21 @@ if ($Input->P->ISSET->add) {
 
 			} else {
 				$modifiedObject = $SUBPAGES[$subpage]->updateFrom($obj, $values);
-				
+
 				$msgOks=array_merge($msgOks, $SUBPAGES[$subpage]->messages);
 				$msgErrors=array_merge($msgErrors, $SUBPAGES[$subpage]->errors);
-				
+
 				$SUBPAGES[$subpage]->messages = array();
 				$SUBPAGES[$subpage]->errors = array();
-				
+
 				if (($modifiedObject !== NULL) && $modifiedObject->isModified() && (count($msgErrors) === 0)) {
 					$q = new UpdateQuery($modifiedObject);
 					$DB->execUpdate($q, 1);
-					if ($SUBPAGES[$subpage]->isFemaleName()) {
-						$msgOks[]=$SUBPAGES[$subpage]->displayName($modifiedObject).' a été modifiée';
-					} else {
-						$msgOks[]=$SUBPAGES[$subpage]->displayName($modifiedObject).' a été modifié';
-					}
+					$msgOks[] = L::label_admin_modified($SUBPAGES[$subpage]->displayName($modifiedObject));
 				}
 			}
 		} // each POST data
-		
+
 		if (count($changedGroups) > 0) {
 			$realType = $SUBPAGES[$subpage]->object->getGroupType();
 
@@ -222,7 +222,7 @@ if ($Input->P->ISSET->add) {
 				}
 				$existings[$row->ref_id][] = $row->group_id;
 			}
-			
+
 			$insertGroups = array();
 			foreach($changedGroups as $id => $newGroups) {
 				$newGroups = array_diff($newGroups, array(-1));
@@ -230,10 +230,10 @@ if ($Input->P->ISSET->add) {
 				if (!isset($existings[$id])) {
 					$existings[$id] = array();
 				}
-				
+
 				$toCreate = array_diff($newGroups, $existings[$id]);
 				$toDelete = array_diff($existings[$id], $newGroups);
-				
+
 				if (count($toCreate) > 0) {
 					foreach($toCreate as $group) {
 						$groupElement = new SsoGroupElement();
@@ -243,21 +243,9 @@ if ($Input->P->ISSET->add) {
 						$insertGroups[] = $groupElement;
 					}
 
-					if ($SUBPAGES[$subpage]->isFemaleName()) {
-						if (count($toCreate) === 1) {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajoutée à '.count($toCreate).' groupe';
-						} else {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajoutée à '.count($toCreate).' groupes';
-						}
-					} else {
-						if (count($toCreate) === 1) {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajouté à '.count($toCreate).' groupe';
-						} else {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été ajouté à '.count($toCreate).' groupes';
-						}
-					}
+					$msgOks[].= L::label_admin_add_groups($SUBPAGES[$subpage]->displayName($objects[$id]), count($toCreate));
 				}
-				
+
 				if (count($toDelete) > 0) {
 					$q = SsoGroupElement::deleteQuery();
 					$q->allowMultipleChange();
@@ -265,32 +253,20 @@ if ($Input->P->ISSET->add) {
 					$q->whereAnd('ref_id', '=', $id);
 					$q->whereAnd('group_id', 'IN', $toDelete);
 					$DB->execDelete($q);
-					
-					if ($SUBPAGES[$subpage]->isFemaleName()) {
-						if (count($toDelete) === 1) {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retirée de '.count($toDelete).' groupe';
-						} else {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retirée de '.count($toDelete).' groupes';
-						}
-					} else {
-						if (count($toDelete) === 1) {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retiré de '.count($toDelete).' groupe';
-						} else {
-							$msgOks[].=$SUBPAGES[$subpage]->displayName($objects[$id]).' a été retiré de '.count($toDelete).' groupes';
-						}
-					}
+
+					$msgOks[].= L::label_admin_remove_groups($SUBPAGES[$subpage]->displayName($objects[$id]), count($toDelete));
 				}
 			}
-			
+
 			if (count($insertGroups) > 0) {
 				$DB->execInsert(new InsertQuery($insertGroups));
 			}
 		}
-		
+
 		if (count($groups) > 0) {
 
 			$realType = $SUBPAGES[$type]->object->getGroupType();
-			
+
 			$q = SsoGroupElement::query(TRUE);
 			$q->whereAnd('group_id', '=', $editId);
 			$q->whereAnd('type', '=', $realType);
@@ -303,34 +279,26 @@ if ($Input->P->ISSET->add) {
 			$template = new SsoGroupElement();
 			$template->type = $realType;
 			$template->group_id = $editId;
-			
+
 			$deleteQueries = $SUBPAGES[$subpage]->relatedObjectsDeleteQueriesAfterUpdate($template, $existings, $groups['DELETE']);
 			$insertQueries = $SUBPAGES[$subpage]->relatedObjectsInsertQueriesAfterUpdate($template, $existings, $groups['ADD']);
-			
+
 			$msgOks=array_merge($msgOks, $SUBPAGES[$subpage]->messages);
 			$msgErrors=array_merge($msgErrors, $SUBPAGES[$subpage]->errors);
-			
+
 			foreach($deleteQueries as $deleteQuery) {
 				$nb = $DB->execDelete($deleteQuery);
-				if ($nb === 1) {
-					$msgOks[$editId.'del']=$nb.' élément a été enlevé du groupe';
-				} else {
-					$msgOks[$editId.'del']=$nb.' éléments ont été enlevés du groupe';
-				}
+				$msgOks[$editId.'del'] = L::label_admin_group_removed($nb);
 			}
-			
+
 			foreach($insertQueries as $insertQuery) {
 				$nb = $insertQuery->getInsertObjectCount();
 				$DB->execInsert($insertQuery);
-				if ($nb === 1) {
-					$msgOks[$editId.'add']=$nb.' élément a été ajouté au groupe';
-				} else {
-					$msgOks[$editId.'add']=$nb.' éléments ont été ajoutés au groupe';
-				}
+				$msgOks[$editId.'add'] = L::label_admin_group_added($nb);
 			}
 
 		} // $groups > 0
-		
+
 		if (count($msgErrors) == 0) {
 			$DB->commit();
 // 			$DB->rollback();
@@ -343,25 +311,38 @@ if ($Input->P->ISSET->add) {
 	} catch (\Exception $ex) {
 		$DB->rollback();
 		$msgOks = array();
-		$msgErrors[]='Impossible de sauvegarder : '.$ex->getMessage();
+		$msgErrors[] = L::error_admin_save($ex->getMessage());
 	}
 } // ISSET POST submit
 
 ?>
-<h2>Administration SSO</h2>
+<h2><?= $Input->HTML(L::label_admin_title) ?></h2>
 
 <div class="tabs">
 <ul>
 <?php foreach($SUBPAGES as $k => $v) {?>
 	<?php $url = \salt\first(explode('?', $Input->S->RAW->REQUEST_URI,2)).'?page=admin&amp;subpage='.$Input->URL($k); ?>
-	<li class="<?= ($subpage == $k)?'selected':''?>">
-		<a href="<?= $url ?>"><?= $Input->HTML($v->title) ?></a>
+	<?php $title = (is_object($v)?$v->title:$v); ?>
+	<li class="<?= ($subpage == $k)?'selected':''?><?= !is_object($v)?' extra':''?>">
+		<a href="<?= $url ?>"><?= $Input->HTML($title) ?></a>
 	</li>
 <?php } ?>
 </ul>
 </div>
 
-<?php 
+<?php
+
+if (!is_object($SUBPAGES[$subpage])) {
+	$file = __DIR__.DIRECTORY_SEPARATOR.'admin_'.$subpage.'.php';
+	if (file_exists($file)) {
+		include $file;
+	} else {
+		throw new BusinessException(L::error_page_not_exists);
+	}
+	// STOP
+	return;
+}
+
 
 // protection agains not allowed columns search
 foreach($search as $k => $v) {
@@ -385,10 +366,10 @@ if (count($data->data) === 0) {
 
 if ($editId !== '') {
 	$currentEdit = $data->data[0];
-	
+
 	$visibleTypes = array();
 	foreach($SUBPAGES as $groupType => $view) {
-		if (!$view->object instanceof SsoGroupable) continue;
+		if (!is_object($view) || !$view->object instanceof SsoGroupable) continue;
 		if (($currentEdit->types & pow(2, $view->object->getGroupType()-1)) === 0) continue;
 		$visibleTypes[$groupType] = $view;
 	}
@@ -403,7 +384,7 @@ if ($editId !== '') {
 	unset($search[SsoAdministrable::WITH_DETAILS]);
 	$search[SsoGroupable::WITH_GROUP]=$editId;
 	$data = $SUBPAGES[$subpage]->object->search($search, $pagination);
-	
+
 	$searchFields = array('id', 'name');
 	$modifiableFields = array(SsoGroupable::WITH_GROUP);
 	$newFields = NULL;
@@ -441,7 +422,7 @@ ViewControl::edit();
 ?>
 
 <?php if ($editId === '') { ?>
-<h3>Liste des <?= $Input->HTML($SUBPAGES[$subpage]->title) ?></h3>
+<h3><?= $Input->HTML(L::label_admin_list_element($SUBPAGES[$subpage]->title)) ?></h3>
 <?php } ?>
 
 <?php if (($subpage === 'groups') || ($editId !== '')) { ?>
@@ -456,18 +437,18 @@ ViewControl::edit();
 	</li>
 <?php } ?>
 </ul>
-</div>	
+</div>
 <?php } ?>
 
 <?php if ($editId !== '') { ?>
-<h3>Modification des éléments du groupe "<?= $Input->HTML($currentEdit->name) ?>"</h3>
+<h3><?= $Input->HTML(L::label_admin_modify_group_elements($currentEdit->name)) ?></h3>
 <?php }?>
 
 <?php if ($editId !== '') { ?>
 <?php 	if (count($visibleTypes) === 0) {?>
-<div class="errors">Aucun type n'est activé pour ce groupe</div>
+<div class="errors"><?= $Input->HTML(L::label_admin_no_type_for_group) ?></div>
 <?php 	} else {?>
-<div class="tabs"> 
+<div class="tabs">
 	<ul>
 <?php 		foreach($visibleTypes as $groupType => $view) {?>
 <?php 			$url = \salt\first(explode('?', $Input->S->RAW->REQUEST_URI,2)).'?page=admin&amp;subpage=groups&amp;edit='.$Input->URL($editId).'&amp;type='.$groupType; ?>
@@ -485,7 +466,7 @@ ViewControl::edit();
 <?php if (($editId === '') || (count($visibleTypes) > 0)) { ?>
 <?= FormHelper::get(NULL, array('page', 'subpage', 'edit', 'type')) ?>
 <fieldset class="search admin">
-	<legend>Critères de recherche</legend>
+	<legend><?= $Input->HTML(L::label_search_criteria) ?></legend>
 
 	<table>
 		<tr>
@@ -497,19 +478,19 @@ ViewControl::edit();
 			</td>
 	<?php }?>
 <?php 			if ($groupable) {?>
-			<td class="legend">Groupe :</td>
+			<td class="legend"><?= $Input->HTML(L::label_group) ?> :</td>
 			<td>
 				<?= SsoGroup::singleton()->FORM('list-'.$SUBPAGES[$subpage]->object->getGroupType())->name ?>
 			</td>
 <?php 			} else if ($editId !== '') {?>
-			<td class="legend">Appartient au groupe :</td>
+			<td class="legend"><?= $Input->HTML(L::label_in_group) ?> :</td>
 			<td>
 <?php 				$field = Field::newBoolean(SsoGroupable::EXISTS_NAME, NULL, TRUE); ?>
 				<?= FormHelper::field($field, SsoGroupable::EXISTS_NAME, NULL) ?>
 			</td>
 <?php 			}?>
 <?php FormHelper::withoutNameContainer() ?>
-			<td><?= FormHelper::input('search_button', 'submit', 'Filtrer') ?></td>
+			<td><?= FormHelper::input('search_button', 'submit', L::button_filter) ?></td>
 		</tr>
 	</table>
 </fieldset>
@@ -522,7 +503,7 @@ ViewControl::edit();
 <?= FormHelper::post(NULL, $params) ?>
 <table class="actions">
 	<tr>
-		<td><?= FormHelper::input('save', 'submit', 'Sauvegarder')?></td>
+		<td><?= FormHelper::input('save', 'submit', L::button_save)?></td>
 	</tr>
 </table>
 <?php if (count($msgErrors) > 0) {?>
@@ -557,7 +538,7 @@ ViewControl::edit();
 <?php } ?>
 <?php if ($editId === '') {?>
 
-		<th>Actions</th>
+		<th><?= $Input->HTML(L::label_actions) ?></th>
 <?php } ?>
 	</tr>
 <?php if (count($extraCols) > 0) {?>
@@ -587,7 +568,8 @@ ViewControl::edit();
 <?php 	} ?>
 
 		<td>
-			<button name="add">Ajouter <img src="<?= SSO_WEB_RELATIVE ?>images/add.png" alt="Ajouter" title="Ajouter"/></button>
+			<button name="add"><?= $Input->HTML(L::button_add) ?> <img src="<?= SSO_WEB_RELATIVE ?>images/add.png"
+				alt="<?= $Input->HTML(L::button_add) ?>" title="<?= $Input->HTML(L::button_add) ?>"/></button>
 		</td>
 <?php 	FormHelper::withoutNameContainer(); ?>
 	</tr>
@@ -600,7 +582,7 @@ ViewControl::edit();
 		<td>
 			<?= in_array($col, $modifiableFields)?$row->FORM($formContext)->$col:$row->VIEW->$col ?>
 <?php 		if (($first) && (count($SUBPAGES[$subpage]->tooltipFields) > 0)) {?>
-<?php 
+<?php
 				$jsCode=<<<'JS'
 $(function() {
 	var tds=$('.setParentHover').closest('td').addClass('hover');
@@ -632,7 +614,7 @@ JS;
 						$changeDetails[]=$tooltipField;
 					}
 				}
-				
+
 				$img = ((count($tooltip) > 0)?'comments':'comment');
 				$click = 'javascript:return false;';
 				if (count($changeDetails) > 0) {
@@ -642,13 +624,13 @@ JS;
 				?>
 			<img src="<?= SSO_WEB_RELATIVE ?>images/<?= $img ?>.png" alt="other fields (<?= $row->VIEW->id ?>)" onclick="<?= $click ?>"/>
 			<div class="hidden setParentHover" style="position:absolute;top:0px;left:0px; background-color: #ddddff; border:1px solid black; padding:5px; text-align:left;">
-				<em>Autres champs pour l'objet <?= $row->VIEW->id ?> :</em><br/>
+				<em><?= $Input->HTML(L::label_admin_other_object_fields($row->VIEW->id)) ?> :</em><br/>
 				<?= implode('<br/>', $details) ?>
 			</div>
 <?php 			if (count($changeDetails) > 0) { ?>
 			<div class="overlay">
 				<div>
-					<b>Modifier les autres champs de l'objet <?= $row->VIEW->id ?></b>
+					<b><?= $Input->HTML(L::label_admin_modify_other_fields($row->VIEW->id)) ?></b>
 					<table>
 <?php 				foreach($changeDetails as $f) {?>
 						<tr>
@@ -657,8 +639,8 @@ JS;
 						</tr>
 <?php 				}?>
 					</table>
-					<input type="button" value="Valider" onclick="handleOverlay($(this).closest('.overlay'), 'save')"/>
-					<input type="button" value="Annuler" onclick="handleOverlay($(this).closest('.overlay'), 'cancel');"/>
+					<input type="button" value="<?= $Input->HTML(L::button_validate) ?>" onclick="handleOverlay($(this).closest('.overlay'), 'save')"/>
+					<input type="button" value="<?= $Input->HTML(L::button_cancel) ?>" onclick="handleOverlay($(this).closest('.overlay'), 'cancel');"/>
 				</div>
 			</div>
 <?php 			} // has Modifiable fields ?>
@@ -668,7 +650,8 @@ JS;
 <?php 	} // each cols ?>
 <?php 	if ($editId === '') {?>
 		<td>
-			<button name="delete[<?= $Input->HTML($row->getId()) ?>]">Supprimer <img src="<?= SSO_WEB_RELATIVE ?>images/delete.png" alt="Supprimer" title="Supprimer"/></button>
+			<button name="delete[<?= $Input->HTML($row->getId()) ?>]"><?= $Input->HTML(L::button_delete) ?> <img src="<?= SSO_WEB_RELATIVE ?>images/delete.png"
+				alt="<?= $Input->HTML(L::button_delete) ?>" title="<?= $Input->HTML(L::button_delete) ?>"/></button>
 		</td>
 <?php 	}?>
 	</tr>

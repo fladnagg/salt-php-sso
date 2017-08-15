@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * redirect to application if login OK
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
 
 $error = NULL;
 if ($Input->G->ISSET->return_url) {

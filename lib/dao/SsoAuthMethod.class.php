@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoAuthMethod class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\lib\dao
+ */
+namespace sso;
 
 use salt\Base;
 use salt\DBHelper;
@@ -9,122 +16,164 @@ use salt\Query;
 use salt\SqlExpr;
 
 /**
- * @property string id
- * @property string name
- * @property boolean default
- * @property boolean create
- * @property int type
- * @property string options
+ * SsoAuthMethod
+ *
+ * @property string $id
+ * @property string $name
+ * @property boolean $default
+ * @property boolean $create
+ * @property int $type
+ * @property string $options
  */
 class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 
+	/** Local type */
 	const TYPE_LOCAL = 0;
+	/** LDAP type */
 	const TYPE_LDAP = 1;
+	/** Database type */
 	const TYPE_DB = 2;
+	/** Class type */
 	const TYPE_CLASS = 3;
-	
+
+	/**
+	 * List of type classes
+	 * @var SsoAuthMethodInterface[] self::TYPE_* => SsoAuthMethodInterface
+	 */
 	private static $TYPES=array();
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @see \salt\Base::metadata()
+	 */
 	protected function metadata() {
 		parent::registerHelper(__NAMESPACE__.'\SsoAuthMethodViewHelper');
-		
+
 		self::$TYPES = array(
 				self::TYPE_DB => new SsoAuthMethodDatabase(),
 				self::TYPE_LDAP => new SsoAuthMethodLdap(),
 				self::TYPE_LOCAL => new SsoAuthMethodLocal(),
 				self::TYPE_CLASS => new SsoAuthMethodClass(),
 		);
-		
+
 		self::MODEL()
 			->registerId('id')
 			->registerTableName('sso_auth_method')
 			->registerFields(
-				Field::newText(	'id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
-				Field::newText(	'name', 	'Nom')->sqlType('VARCHAR(64) UNIQUE'),
-				Field::newBoolean('default', 'Par défault', FALSE, FALSE),
-				Field::newBoolean('create', 'Création à la volée', FALSE, FALSE),
-				Field::newNumber('type', 	'Type', FALSE, self::TYPE_LDAP, array(
-						self::TYPE_LOCAL => 'Local',
-						self::TYPE_LDAP => 'LDAP',
-						self::TYPE_DB => 'Base de données',
-						self::TYPE_CLASS => 'Classe',
+				Field::newText(	'id', 			L::field_id)->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
+				Field::newText(	'name', 		L::field_name)->sqlType('VARCHAR(64) UNIQUE'),
+				Field::newBoolean('default', 	L::field_default, FALSE, FALSE),
+				Field::newBoolean('create', 	L::field_create_on_fly, FALSE, FALSE),
+				Field::newNumber('type', 		L::field_type, FALSE, self::TYPE_LDAP, array(
+						self::TYPE_LOCAL => L::auth_type_local,
+						self::TYPE_LDAP => 	L::auth_type_ldap,
+						self::TYPE_DB => 	L::auth_type_db,
+						self::TYPE_CLASS => L::auth_type_class,
 				)),
-				Field::newText('options', 'Paramètres', TRUE)->sqlType('TEXT')
+				Field::newText('options', 		L::field_parameters, TRUE)->sqlType('TEXT')
 			)
 		;
 	}
 
+	/**
+	 * Retrieve options of auth type
+	 * @param mixed[] $value current values as key => value
+	 * @return \salt\Field[] Options list
+	 */
 	public function getOptions($value = NULL) {
 		return self::$TYPES[$this->type]->getOptions($value);
 	}
-	
+
+	/**
+	 * Retrieve the local auth method
+	 * @return \sso\SsoAuthMethod
+	 */
 	public static function getLocal() {
 		$auth = new SsoAuthMethod();
 		$auth->type = self::TYPE_LOCAL;
 		$auth->name = 'LOCAL';
-		
+
 		$obj = new \stdClass();
 		$obj->field_id = 'id';
 		$obj->field_name = 'name';
-		
+
 		$auth->options = json_encode($obj);
 
 		return $auth;
 	}
-	
-	public function initAfterCreateTable() {
+
+	/**
+	 * {@inheritDoc}
+	 * @param DBHelper $db database where table is created
+	 * @see \salt\Base::initAfterCreateTable()
+	 */
+	public function initAfterCreateTable(DBHelper $db) {
 		return array(self::getLocal());
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @see \sso\SsoGroupable::getGroupType()
+	 */
 	public static function getGroupType() {
 		return SsoGroupElement::TYPE_AUTH;
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @see \sso\SsoGroupable::getNameField()
+	 */
 	public function getNameField() {
 		return 'name';
 	}
 
-	public static function search(array $criteres, Pagination $pagination = NULL) {
+	/**
+	 * {@inheritDoc}
+	 * @param mixed[] $criteria criteria as key => value
+	 * @param Pagination $pagination pagination object
+	 * @see \sso\SsoAdministrable::search()
+	 */
+	public static function search(array $criteria, Pagination $pagination = NULL) {
 		$DB = DBHelper::getInstance('SSO');
 
 		$q = SsoAuthMethod::query(TRUE);
 
-		if (isset($criteres[self::WITH_GROUP])) {
+		if (isset($criteria[self::WITH_GROUP])) {
 			$qGroup = SsoGroupElement::query();
 			$qGroup->whereAnd('type', '=', self::getGroupType());
-			$qGroup->whereAnd('group_id', '=', $criteres[self::WITH_GROUP]);
+			$qGroup->whereAnd('group_id', '=', $criteria[self::WITH_GROUP]);
 			$q->join($qGroup, 'id', '=', $qGroup->ref_id, 'LEFT OUTER');
 			$q->select(SqlExpr::_ISNULL($qGroup->group_id)->before(SqlExpr::text('!'))->asBoolean(), self::WITH_GROUP);
-			unset($criteres[self::WITH_GROUP]);
+			unset($criteria[self::WITH_GROUP]);
 
-			if (isset($criteres[self::EXISTS_NAME])) {
-				if ($criteres[self::EXISTS_NAME] !== '') {
+			if (isset($criteria[self::EXISTS_NAME])) {
+				if ($criteria[self::EXISTS_NAME] !== '') {
 					$value = SqlExpr::value(NULL);
-					if ($criteres[self::EXISTS_NAME] == 1) {
+					if ($criteria[self::EXISTS_NAME] == 1) {
 						$value->not();
 					}
 					$q->whereAnd($qGroup->group_id, 'IS', $value);
 				}
-				unset($criteres[self::EXISTS_NAME]);
+				unset($criteria[self::EXISTS_NAME]);
 			}
 		} else {
 			// with a group concat on a left outer field, we have to add a group by on each field
 			foreach($q->getSelectFields() as $select) {
 				$q->groupBy($select);
 			}
-				
-			$gElem = SsoGroupElement::query(); // Tout les groupes liés a l'application
+
+			$gElem = SsoGroupElement::query(); // All groups linked to application
 			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_AUTH);
 			$q->join($gElem, 'id', '=', $gElem->ref_id, 'LEFT OUTER');
-				
-			$qGroupElem = SsoGroup::query(); // Nom des groupes liés a l'utilisateur
+
+			$qGroupElem = SsoGroup::query(); // Group names linked to user
 			$q->join($qGroupElem, $gElem->group_id, '=', $qGroupElem->id, 'LEFT OUTER');
 			$expr = $qGroupElem->name->distinct();
 			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
 			$q->select(SqlExpr::_GROUP_CONCAT($expr), SsoGroupable::GROUPS);
 		}
 
-		foreach($criteres as $k => $v) {
+		foreach($criteria as $k => $v) {
 			if ($v !== '') {
 				if ($k === 'group') {
 					$qGroup = SsoGroupElement::query();
@@ -146,12 +195,12 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 
 		return $DB->execQuery($q, $pagination);
 	}
-	
+
 	/**
-	 * 
-	 * @param string $user
-	 * @param string $pass
-	 * @return AuthUser 
+	 * Try to authenticate a user
+	 * @param string $user user name
+	 * @param string $pass user password
+	 * @return AuthUser The user object, identified of not (isLogged())
 	 */
 	public function auth($user, $pass) {
 		$options = json_decode($this->options);
@@ -161,18 +210,18 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 
 		return self::$TYPES[$this->type]->auth($user, $pass, $options);
 	}
-	
+
 	/**
-	 *
-	 * @param string $search
-	 * @return AuthUser
+	 * Search a user
+	 * @param string[]|string $search User ID or fields to search as key => value
+	 * @return AuthUser The user object
 	 */
 	public function searchUser($search) {
 		$options = json_decode($this->options);
 		if ($options  === NULL) {
 			$options = new \stdClass();
 		}
-	
+
 		return self::$TYPES[$this->type]->search($search, $options);
 	}
 }

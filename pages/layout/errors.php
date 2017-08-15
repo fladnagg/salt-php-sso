@@ -1,4 +1,12 @@
-<?php namespace sso; ?>
+<?php
+/**
+ * display error file
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages\layout
+ */
+namespace sso;
+?>
 <?php if (count(ErrorHandler::$ERRORS)>0) { ?>
 <div id="errors">
 	<ul>

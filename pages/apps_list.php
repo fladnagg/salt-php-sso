@@ -1,5 +1,13 @@
-<?php namespace sso;?>
-<h4>Liste des applications auxquelles vous avez accès</h4>
+<?php
+/**
+ * display application list
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
+?>
+<h4><?= $Input->HTML(L::label_access_list) ?></h4>
 <div class="appli list">
 <?php foreach($applis->data as $appli) {?>
 	<?php $icon = (strlen($appli->icon) > 0)?$appli->path.$appli->icon:SSO_WEB_RELATIVE.'images/default-icon.png'; ?>

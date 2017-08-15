@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoGroupAdmin class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\view\admin
+ */
+namespace sso;
 
 use salt\Base;
 use salt\DBHelper;
@@ -8,16 +15,24 @@ use salt\InsertQuery;
 use salt\Query;
 use salt\SqlExpr;
 
+/**
+ * Class for Group admin
+ */
 class SsoGroupAdmin extends SsoAdmin {
 
+	/**
+	 * @var int[] types of groupable element : key => SsoGroupElement::TYPE_* */
 	private static $types = array(
 		'users' => SsoGroupElement::TYPE_USER,
 		'applis' => SsoGroupElement::TYPE_APPLI,
 		'auths' => SsoGroupElement::TYPE_AUTH,
 	);
 
+	/**
+	 * Build a new Group admin class
+	 */
 	public function __construct() {
-		$this->title = 'Groupes';
+		$this->title = L::admin_group;
 		$this->object = SsoGroup::singleton();
 		$this->searchFields = array('name', 'types');
 		$this->modifiableFields = array('name');
@@ -38,57 +53,78 @@ class SsoGroupAdmin extends SsoAdmin {
 			$this->newFields[]='default_'.$groupable;
 		}
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $obj object
+	 * @see \sso\SsoAdmin::displayName()
+	 */
 	public function displayName(Base $obj) {
-		return 'Le groupe '.$obj->name;
+		return '['.$obj->name.']';
 	}
-	
-	public function createFrom(array $datas) {
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param mixed[] $data key => value
+	 * @see \sso\SsoAdmin::createFrom()
+	 */
+	public function createFrom(array $data) {
+
 		$obj = $this->object->getNew();
 
 		$defaults = 0;
 		$types = 0;
 		foreach(self::$types as $name => $value) {
-			if (isset($datas['type_'.$name])) {
+			if (isset($data['type_'.$name])) {
 				$types |= pow(2, $value -1);
 			}
-			if (isset($datas['default_'.$name])) {
+			if (isset($data['default_'.$name])) {
 				$defaults |= pow(2, $value -1);
 			}
 		}
 
-		$obj->name = $datas['name'];
+		$obj->name = $data['name'];
 		$obj->defaults = $defaults;
 		$obj->types = $types;
 
 		return $obj;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * @param Base $obj the object to delete
+	 * @see \sso\SsoAdmin::relatedObjectsDeleteQueries()
+	 */
 	public function relatedObjectsDeleteQueries(Base $obj) {
-		
+
 		$DB = DBHelper::getInstance('SSO');
-		
+
 		$result = array();
-	
+
 		$q = SsoGroupElement::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('group_id', '=', $obj->id);
 		$result[] = $q;
-		
+
 		$q = SsoCredential::query();
 		$q->whereOr('appli_group', '=', $obj->id);
 		$q->whereOr('user_group', '=', $obj->id);
 
 		$nb = $DB->execCountQuery($q);
 		if ($nb > 0) {
-			$this->addError('Impossible de supprimer le groupe '.$obj->name.' car il est référencé par '.$nb.' autorisation(s)');
+			$this->addError(L::error_group_delete_used($obj->name, $nb));
 			return array();
 		}
-	
+
 		return $result;
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $obj the object to update
+	 * @param mixed[] $data key => value
+	 * @see \sso\SsoAdmin::updateFrom()
+	 */
 	public function updateFrom(Base $obj, array $data) {
 
 		$obj->name = $data['name'];
@@ -103,19 +139,19 @@ class SsoGroupAdmin extends SsoAdmin {
 				$defaults |= pow(2, $value -1);
 			}
 		}
-		
+
 		$removedTypes = $obj->types & ~$types; // old AND NOT new : all 1 bits in old but missing in new
-		
+
 		if ($removedTypes > 0) {
 			$q = SsoGroupElement::query();
 			$q->whereAnd('group_id', '=', $obj->id);
-			
+
 			//(pow(2, t1.type-1) & 5)
-			
+
 			$expr = SqlExpr::_POW(2, $q->type->after(SqlExpr::text(' - 1')));
-			
+
 			$q->whereAnd($expr, '&', $removedTypes);
-			
+
 			$DB = DBHelper::getInstance('SSO');
 			$nb = $DB->execCountQuery($q);
 			if ($nb > 0) {
@@ -127,23 +163,26 @@ class SsoGroupAdmin extends SsoAdmin {
 						$types[] = $values[$i+1];
 					}
 				}
-				if (count($types) > 1) {
-					$this->addError('Impossible de désactiver les types ('.implode(', ', $types).') pour le groupe '.$obj->name.' car le groupe contient '.$nb.' élément(s) de ces types');
-				} else {
-					$this->addError('Impossible de désactiver le type '.implode('', $types).' pour le groupe '.$obj->name.' car le groupe contient '.$nb.' élément(s) de ce type');
-				}
+				$this->addError(L::error_group_disable_used(implode(', ', $types), $obj->name, $nb));
 				return NULL;
 			}
 		}
-		
+
 		$obj->defaults = $defaults & $types; // default cannot be activated for disabled types
 		$obj->types = $types;
-		
+
 		return $obj;
 	}
-	
-	public function relatedObjectsDeleteQueriesAfterUpdate(Base $template, array $existingIds, array $deleteIds) {
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param SsoGroupElement $template object to delete with some field setted
+	 * @param array $existingIds existing elements id
+	 * @param array $deleteIds deleted elements id
+	 * @see \sso\SsoAdmin::relatedObjectsDeleteQueriesAfterUpdate()
+	 */
+	public function relatedObjectsDeleteQueriesAfterUpdate(SsoGroupElement $template, array $existingIds, array $deleteIds) {
+
 		$deletedGroups = array_intersect($deleteIds, $existingIds);
 		if (count($deletedGroups) > 0) {
 			$q = SsoGroupElement::deleteQuery();
@@ -151,13 +190,21 @@ class SsoGroupAdmin extends SsoAdmin {
 			$q->whereAnd('group_id', '=', $template->group_id);
 			$q->whereAnd('type', '=', $template->type);
 			$q->whereAnd('ref_id', 'IN', $deletedGroups);
-			
+
 			return array($q);
 		}
 		return array();
 
 	}
-	public function relatedObjectsInsertQueriesAfterUpdate(Base $template, array $existingIds, array $newIds) {
+
+	/**
+	 * {@inheritDoc}
+	 * @param SsoGroupElement $template object to insert with some field setted
+	 * @param array $existingIds existing elements id
+	 * @param array $newIds new elements id
+	 * @see \sso\SsoAdmin::relatedObjectsInsertQueriesAfterUpdate()
+	 */
+	public function relatedObjectsInsertQueriesAfterUpdate(SsoGroupElement $template, array $existingIds, array $newIds) {
 
 		$addedGroups = array_diff($newIds, $existingIds);
 		if (count($addedGroups) > 0) {
@@ -172,8 +219,12 @@ class SsoGroupAdmin extends SsoAdmin {
 		}
 		return array();
 	}
-	
 
+	/**
+	 * {@inheritDoc}
+	 * @param DBResult $data all objects
+	 * @see \sso\SsoAdmin::buildViewContext()
+	 */
 	public function buildViewContext(DBResult $data) {
 		$groupsElements = SsoGroupElement::getTooltipContents();
 		return array('tooltip' => $groupsElements);

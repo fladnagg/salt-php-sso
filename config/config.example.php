@@ -1,53 +1,67 @@
-<?php namespace sso;
+<?php
+/**
+ * Configuration file example. Rename to config.php
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\config
+ */
+namespace sso;
 
-/** Absolute path of SALT framework **/
-define(__NAMESPACE__.'\SALT_PATH', '...');
+/** Absolute path of SALT framework */
+define('sso\SALT_PATH', '...');
 
-/** 
+/**
  * Absolute path of SSO Session store path
- * 
- * We use a specific path for session files because some OS (debian and derivated : ubuntu, etc...) use a specific 
+ *
+ * We use a specific path for session files because some OS (debian and derivated : ubuntu, etc...) use a specific
  * cron script for clean sessions, based on php.ini files.
- * In the SSO, each user can choose the lifetime of the session, but it does not work well if OS clean session 
- * files after 30mn... 
+ * In the SSO, each user can choose the lifetime of the session, but it does not work well if OS clean session
+ * files after 30mn...
  **/
-define(__NAMESPACE__.'\SESSION_PATH', '...');
+define('sso\SESSION_PATH', '...');
 
-/** Absolute path of SSO from web root. Optional. Automatically computed if not provided **/
-// define(__NAMESPACE__.'\SSO_WEB_PATH', '/sso');
+/** Absolute path of SSO from web root. Optional. Automatically computed if not provided */
+// define('sso\SSO_WEB_PATH', '/sso');
 
-/** Sso charset **/
-define(__NAMESPACE__.'\SSO_CHARSET', 'UTF-8');
+/** Sso charset */
+define('sso\SSO_CHARSET', 'UTF-8');
 if (!defined('salt\CHARSET')) {
-	/** Salt charset **/
+	/** Salt charset */
 	define('salt\CHARSET', SSO_CHARSET);
 }
-/** 
+
+/** Default SSO locale **/
+define('sso\SSO_LOCALE', 'en');
+
+/**
  * Client charset for database as MySQL expected it
- * 
+ *
  * It's better if database and website charset are the same, but if not, we have to set here the website charset.
  * MySQL will convert all input/output data to this charset from/to the database charset.
- * @see http://mysql.rjweb.org/doc.php/charcoll#how_mangling_happens_on_insert
+ * @see http://mysql.rjweb.org/doc.php/charcoll#how_mangling_happens_on_insert for how DB charset works
  * @see http://dev.mysql.com/doc/en/charset-charsets.html for supported charsets
  */
-define(__NAMESPACE__.'\SSO_DB_CHARSET', 'utf8');
+define('sso\SSO_DB_CHARSET', 'utf8');
 
-/** Database host name **/
-define(__NAMESPACE__.'\SSO_DB_HOST', 'localhost');
-/** Database port **/
-define(__NAMESPACE__.'\SSO_DB_PORT', 3306);
-/** Database name **/
-define(__NAMESPACE__.'\SSO_DB_DATABASE', 'database');
-/** Database user **/
-define(__NAMESPACE__.'\SSO_DB_USER', 'root');
-/** Database password **/
-define(__NAMESPACE__.'\SSO_DB_PASS', 'password');
+/** Database host name */
+define('sso\SSO_DB_HOST', 'localhost');
+/** Database port */
+define('sso\SSO_DB_PORT', 3306);
+/** Database name */
+define('sso\SSO_DB_DATABASE', 'database');
+/** Database user */
+define('sso\SSO_DB_USER', 'root');
+/** Database password */
+define('sso\SSO_DB_PASS', 'password');
 
-/** Number of elements displayed in autocomplete list  **/
-define(__NAMESPACE__.'\SSO_MAX_AUTOCOMPLETE_ELEMENTS', 8);
-/** Number of characters required for an autocomplete search **/
-define(__NAMESPACE__.'\SSO_MIN_AUTOCOMPLETE_CHARACTERS', 2);
-/** Number of elements displayed in tooltip **/
-define(__NAMESPACE__.'\SSO_MAX_TOOLTIP_ELEMENTS', 8);
+/** Allow the database user to be used for login as administrator */
+define('sso\ALLOW_DB_USER_LOGIN', FALSE);
+
+/** Number of elements displayed in autocomplete list  */
+define('sso\SSO_MAX_AUTOCOMPLETE_ELEMENTS', 8);
+/** Number of characters required for an autocomplete search */
+define('sso\SSO_MIN_AUTOCOMPLETE_CHARACTERS', 2);
+/** Number of elements displayed in tooltip */
+define('sso\SSO_MAX_TOOLTIP_ELEMENTS', 5);
 
 

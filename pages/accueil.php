@@ -1,20 +1,27 @@
-<?php namespace sso;
+<?php
+/**
+ * display main login page
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
 
 use salt\FormHelper;
 
 $error = NULL;
 if ($Input->G->ISSET->reason) {
 	if ($Input->G->RAW->reason != SsoClient::AUTH_KO_NO_SESSION) {
-		$error = 'Vous avez été déconnecté car '.SsoClient::getLogoutReason($Input->G->RAW->reason);
+		$error = L::error_logout_with_reason(SsoClient::getLogoutReason($Input->G->RAW->reason));
 	}
 }
 
 if ($Input->P->ISSET->sso_user) {
 
 	if ($Input->P->RAW->sso_user === '') {
-		$error = 'Utilisateur obligatoire';
-	} else if ($Input->P->RAW->sso_password === '') {
-		$error = 'Mot de passe obligatoire';
+		$error = L::error_user_missing;
+// 	} else if ($Input->P->RAW->sso_password === '') { // in a local install, password can be... empty
+// 		$error = L::error_password_missing
 	}
 
 	if ($error === NULL) {
@@ -36,13 +43,10 @@ if ($sso->getUser() !== NULL) {
 	$stateMessage = NULL;
 	switch($sso->getUser()->getState()) {
 		case SsoUser::STATE_DISABLED :
-			$stateMessage = "Votre compte [".$Input->HTML($sso->getUser()->id)."] est actuellement désactivé.
-					Vous devez contacter un administrateur pour l'activer";
+			$stateMessage = L::error_user_state_disabled($sso->getUser()->id);
 		break;
-		
 		case SsoUser::STATE_TO_VALIDATE :
-			$stateMessage = "Votre compte [".$Input->HTML($sso->getUser()->id)."] est en attente de validation par un administrateur.
-					Merci de réessayer plus tard.";
+			$stateMessage = L::error_user_state_pending($sso->getUser()->id);
 		break;
 	}
 	if ($stateMessage !== NULL) {
@@ -53,33 +57,33 @@ if ($sso->getUser() !== NULL) {
 	<?= nl2br($Input->HTML($stateMessage))?>
 	<br/><br/>
 </div>
-		
+
 <?php } else { ?>
 <div class="login">
 	<?= FormHelper::post() ?>
-	<h2>Merci de vous identifier</h2>
+	<h2><?= $Input->HTML(L::label_welcome_login_text) ?></h2>
 <?php if ($error !== NULL) { ?>
 <?php 	error_log('[SSO][Warning] '.$error); ?>
-		<div class="errors">L'utilisateur ou le mot de passe est incorrect</div>
+		<div class="errors"><?= $Input->HTML(L::error_login) ?></div>
 <?php } ?>
 
 	<fieldset>
 		<table>
 			<tr>
-				<th class="field user">Utilisateur</th>
+				<th class="field user"><?= $Input->HTML(L::field_user) ?></th>
 				<td class="input user"><?= FormHelper::input('sso_user') ?></td>
 			</tr>
 			<tr>
-				<th class="field password">Mot de passe</th>
+				<th class="field password"><?= $Input->HTML(L::field_password) ?></th>
 				<td class="input password"><?= FormHelper::input('sso_password', 'password') ?></td>
 			</tr>
 			<tr>
-				<th class="field public">Restreindre la connexion à cette session</th>
-				<td class="input public"><?= FormHelper::input('sso_public', 'checkbox') ?> (Ordinateur public)</td>
+				<th class="field public"><?= $Input->HTML(L::label_restrict_login_to_session) ?></th>
+				<td class="input public"><?= FormHelper::input('sso_public', 'checkbox') ?> (<?= $Input->HTML(L::label_public_computer) ?>)</td>
 			</tr>
 		</table>
 	</fieldset>
-	<div class="submit"><input type="submit" value="Envoyer" /></div>
+	<div class="submit"><input type="submit" value="<?= $Input->HTML(L::button_send) ?>" /></div>
 	<?= FormHelper::end() ?>
 </div>
-<?php } 
+<?php }

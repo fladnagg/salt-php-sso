@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * display pagination
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages\layout
+ */
+namespace sso;
 
 use salt\Pagination;
 use salt\FormHelper;
@@ -25,14 +32,14 @@ if (!isset($pagination_type)) {
 <?php } ?>
 	</td>
 	<td>
-		<?= $pagination->getCount() ?> résultat(s)
+		<?= $Input->HTML(L::pagination_results($pagination->getCount())) ?>
 	</td>
 	<td>
-		Page : <?=$pagination->getPage()?> / <?= $pagination->getMaxPages() ?>
+		<?= $Input->HTML(L::pagination_pages($pagination->getPage(), $pagination->getMaxPages())) ?>
 	</td>
 	<td>
 <?php if ($pagination->getMaxPages() > 1) {?>
-			<label>Aller à la page :</label>
+			<label><?= $Input->HTML(L::pagination_goto) ?> :</label>
 			<select
 	<?php if ($pagination_type =='') {?>
 				name="offset<?= $pagination_type ?>"

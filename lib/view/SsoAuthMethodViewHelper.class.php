@@ -1,43 +1,80 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoAuthMethodViewHelper class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\view
+ */
+namespace sso;
 
 use salt\Field;
 use salt\FormHelper;
 use salt\Base;
 
+/**
+ * ViewHelper for AuthMethod
+ */
 class SsoAuthMethodViewHelper extends SsoGroupableViewHelper {
 
+	/**
+	 * @var string[] help text for fields : fieldName => helpText */
 	private static $HELP = array(
-		'default' => "Sera utilisé dans l'ordre alphabétique si aucune méthode n'est spécifiée pour un utilisateur",
-		'create' => "Un nouvel utilisateur authentifié depuis cette source sera créé dynamiquement dans le SSO. Dans le cas contraire, l'utilisateur sera quand même créé mais n'aura accès a rien et son compte devra être validé par un administrateur.",
+		'default' => L::help_auth_default,
+		'create' => L::help_auth_create,
 	);
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Field $field the field to display
+	 * @param string $format format to use for change the output
+	 * @see \sso\SsoGroupableViewHelper::column()
+	 */
 	public function column(Field $field, $format = NULL) {
 		global $Input;
 		$result = parent::column($field, $format);
-		
+
 		if (isset(self::$HELP[$field->name])) {
 			$result.='&nbsp;<img src="'.SSO_WEB_RELATIVE.'images/help.png" class="aide" alt="aide" title="'.$Input->HTML(self::$HELP[$field->name]).'" />';
 		}
-		
+
 		return $result;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to display
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \sso\SsoGroupableViewHelper::show()
+	 */
 	public function show(Base $object, Field $field, $value, $format, $params) {
-		
+		global $Input;
+
 		if (($object->type === SsoAuthMethod::TYPE_LOCAL) && ($field->name === 'create')) {
-			return ($value==0)?'Non':'Oui';
+			return $Input->HTML(($value==0) ? L::no : L::yes);
 		}
-		
+
 		return parent::show($object, $field, $value, $format, $params);
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to edit
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \sso\SsoGroupableViewHelper::edit()
+	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
-		
+
 		if (($object->type === SsoAuthMethod::TYPE_LOCAL) && (!in_array($field->name, array('in_group', 'default', 'name', 'groups')))) { // READONLY on LOCAL
 			return self::show($object, $field, $value, $format, $params);
 		}
-		
+
 		switch($field->name) {
 			case 'type' :
 				$options = $field->values;
@@ -74,23 +111,26 @@ class SsoAuthMethodViewHelper extends SsoGroupableViewHelper {
 					$fields[]='<tr><td class="field">'.$Input->HTML($opt->text).$help.'</td><td class="input">'.FormHelper::field($opt, NULL, NULL).'</td></tr>';
 					$tooltip[]=$opt->text.' : '.$values[$opt->name];
 				}
-				
+
 				$fields = implode('', $fields);
 				$tooltip = implode("\n", $tooltip);
-				
-				$result = '<img src="'.SSO_WEB_RELATIVE.'images/edit.png" alt="Modifier" title="'.$Input->HTML($tooltip).'" onclick="javascript: modifyAuthOptions($(this).next(\'.overlay\')[0], \'show\')"/>';
-				
-				$name = $Input->HTML($object->name);
-				
+
+				$result = '<img src="'.SSO_WEB_RELATIVE.'images/edit.png" alt="modify" title="'.$Input->HTML($tooltip).'" onclick="javascript: modifyAuthOptions($(this).next(\'.overlay\')[0], \'show\')"/>';
+
+				$title = $Input->HTML(L::label_modify_parameters_of($object->name));
+
+				$buttonValidate = $Input->HTML(L::button_validate);
+				$buttonCancel = $Input->HTML(L::button_cancel);
+
 				$html=<<<HTML
 <div class="overlay">
 	<div>
-		<b>Modifier les paramètres de {$name}</b><br/>
+		<b>{$title}</b><br/>
 		<table>
 		{$fields}
 		</table>
-		<input type="button" value="Valider" onclick="javascript: modifyAuthOptions(this, 'save')" />
-		<input type="button" value="Annuler" onclick="javascript: modifyAuthOptions(this, 'cancel')"/>
+		<input type="button" value="{$buttonValidate}" onclick="javascript: modifyAuthOptions(this, 'save')" />
+		<input type="button" value="{$buttonCancel}" onclick="javascript: modifyAuthOptions(this, 'cancel')"/>
 	</div>
 </div>
 HTML;
@@ -100,14 +140,14 @@ HTML;
 					$params = array();
 				}
 				$params['type'] = 'hidden';
-				
+
 				$result.=parent::edit($object, $field, $value, $format, $params);
-				
+
 				return $result;
 			break;
 		}
-		
+
 		return parent::edit($object, $field, $value, $format, $params);
 	}
-	
+
 }

@@ -1,8 +1,16 @@
-<?php namespace sso; ?>
-<h2>Applications SSO pour l'utilisateur <?= $Input->HTML($sso->getLogin())?></h2>
+<?php
+/**
+ * display main user page with available applications
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\pages
+ */
+namespace sso;
+?>
+<h2><?= $Input->HTML(L::label_app_title($sso->getLogin()))?></h2>
 <?php $error = NULL; ?>
 <?php if ($Input->G->ISSET->from) {
-	
+
 		if ($Input->G->RAW->from === 'client') {
 			// we came from a client application : user does not have credentials for access app.
 			// Maybe credentials have changed since last login : refresh them from base
@@ -11,25 +19,21 @@
 			if ($sso->checkCredentials($sso->session->SSO_REDIRECT)) {
 				$sso->resumeApplication();
 			}
-		} 
+		}
 		if ($Input->G->RAW->from === 'init_error') {
 			// an error occured during application init
 			// we refresh user for update credentials, maybe user is not allowed anymore
 			$sso->refreshUser();
 			// but we don't try to redirect
-			$error = "Une erreur est survenue lors de l'authentification à l'application demandée";
+			$error = L::error_app_auth;
 		} else {
 			$from = $sso->session->SSO_REDIRECT;
 			$sso->session->SSO_REDIRECT = NULL;
-			
-			$error = "Vous avez été redirigé vers cette page car vous n'aviez pas accès à l'application {$from}
-Merci de choisir une autre application ci-dessous.";
+			$error = L::error_app_forbidden($from);
 		}
 	?>
 <?php 	if (isset($error)) {?>
-<div class='errors'>
-	<?= nl2br($Input->HTML($error)) ?>
-</div>
+<div class='errors'><?= nl2br($Input->HTML($error)) ?></div>
 <?php 	}?>
 <?php } ?>
 
@@ -38,8 +42,8 @@ Merci de choisir une autre application ci-dessous.";
 	$applis = SsoAppli::getByPath(array_keys($apps));
 
 	$staticTabs=array(
-			'list' => 'Applications autorisées', 
-			'ask' => 'Demandes d\'accès',
+			'list' => L::app_menu_list,
+			'ask' => L::app_menu_ask,
 	);
 	$tabs = $staticTabs;
 // 	$tabs[SSO_WEB_PATH] = 'SSO'; // not necessary : SSO will always use a top right menu

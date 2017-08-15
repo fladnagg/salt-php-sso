@@ -1,32 +1,56 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoUserViewHelper class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\view
+ */
+namespace sso;
 
 use salt\Base;
 use salt\Field;
 use salt\FormHelper;
 
+/**
+ * ViewHelper for SsoUser
+ */
 class SsoUserViewHelper extends SsoGroupableViewHelper {
 
+	/**
+	 * {@inheritDoc}
+	 * @param Field $field the field to display
+	 * @param string $format format to use for change the output
+	 * @see \sso\SsoGroupableViewHelper::column()
+	 */
 	public function column(Field $field, $format=NULL) {
 		global $Input;
 		if ($field->name === 'auths') {
-			return $Input->HTML('Autorisations');
+			return $Input->HTML(L::admin_credential);
 		} else if ($field->name === 'password') {
 			return parent::column($field, $format).'&nbsp;'.
 				'<img src="'.SSO_WEB_RELATIVE.'images/help.png" class="aide" alt="aide" '.
-					'title="Le mot de passe n\'est nécessaire que pour le type d\'authentification &quot;'.
-					SsoAuthMethod::MODEL()->type->values[SsoAuthMethod::TYPE_LOCAL].'&quot;"/>';
+					'title="'.$Input->HTML(L::help_user_password_locale(SsoAuthMethod::MODEL()->type->values[SsoAuthMethod::TYPE_LOCAL])).'"/>';
 		} else if ($field->name === 'password2') {
-			return $Input->HTML('Confirmer le mot de passe');
+			return $Input->HTML(L::field_confirm_password);
 		} else {
 			return parent::column($field, $format);
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to display
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \salt\BaseViewHelper::text()
+	 */
 	public function text(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		switch($field->name) {
 			case 'admin' :
-				return ($value == 1)?'Oui':'Non';
+				return ($value == 1)?L::yes : L::no;
 				break;
 			default:
 		}
@@ -34,6 +58,15 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 		return parent::text($object, $field, $value, $format, $params);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to display
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \sso\SsoGroupableViewHelper::show()
+	 */
 	public function show(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		switch($field->name) {
@@ -41,37 +74,34 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 				if ($object->isNew()) {
 					return '&nbsp;';
 				}
-	
+
 				if ($value !== NULL) {
 					$value = explode(SsoUser::GROUP_CONCAT_SEPARATOR_CHAR, $value);
 				} else {
 					$value = array();
 				}
-				
+
 				$title = $value;
 				if (count($title) > SSO_MAX_TOOLTIP_ELEMENTS) {
 					$title = array_slice($title, 0, SSO_MAX_TOOLTIP_ELEMENTS);
 					$title[] = '...';
 				}
-	
+
 				return '<span class="aide" title="'.$Input->HTML(implode("\n", $title)).'">'.$Input->HTML(count($value))
 					.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=credentials&amp;search[user]='.$object->id.'">'
-					.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="Modifier" title="Modifier"/>'
+					.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify).'" title="'.$Input->HTML(L::button_modify).'"/>'
 					.'</a></span>';
 			break;
 			case 'password' :
 				if (strlen(trim($value)) > 0) {
-					return 'Oui';
+					return $Input->HTML(L::yes);
 				} else {
-					return 'Non';
+					return $Input->HTML(L::no);
 				}
 			break;
-			
 			case 'restrictIP' :
-				return ($value)?'Oui':'Non';
-			break;
 			case 'restrictAgent' :
-				return ($value)?'Oui':'Non';
+				return $Input->HTML(($value)?L::yes : L::no);
 			break;
 			case 'timeout' :
 				$result = '';
@@ -83,11 +113,21 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 		}
 		return parent::show($object, $field, $value, $format, $params);
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field the field
+	 * @param mixed $value the value to edit
+	 * @param string $format format to use
+	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
+	 * @see \sso\SsoGroupableViewHelper::edit()
+	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
-		
+		global $Input;
+
 		static $authsMethods = NULL;
-		
+
 		switch ($field->name) {
 			case 'timeout' :
 				$data = SsoUser::intTimeoutToArray($value);
@@ -120,30 +160,30 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 					}
 				}
 
-				$groupes = $this->getGroupOptions(SsoGroupElement::TYPE_AUTH, $params['tooltip']);
+				$groupes = SsoGroupableViewHelper::getGroupOptions(SsoGroupElement::TYPE_AUTH, $params['tooltip']);
 				foreach($groupes as $k => $v) {
 					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
-				$opts = array(''=>array('value' => '', 'title' => ''))+$authsMethods+array('Groupes' => array('group' => $groupes));
-				
+				$opts = array(''=>array('value' => '', 'title' => ''))+$authsMethods+array(L::admin_group => array('group' => $groupes));
+
 				if (($value === NULL) && ($object->auth_group !== NULL)) {
 					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->auth_group;
 				}
-				
+
 				$result = FormHelper::select($field->name, $opts, $value, array('selectTitle'), array('onchange' => 'javascript: selectTitle(this)'))
 				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=auths&amp;edit='.substr($value, strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE)).'">'
-				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="Modifier le groupe" title="Modifier le groupe"/>'
+				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify_group).'" title="'.$Input->HTML(L::button_modify_group).'"/>'
 				.'</a>';
 				;
 
 				return $result;
 
 			break;
-			
+
 			case 'admin' :
 				if ($format === 'search') {
-					return FormHelper::select('admin', array('' => 'Tous', '1' => 'Oui', '0' => 'Non'));
+					return FormHelper::select('admin', array('' => L::all, '1' => L::yes, '0' => L::no));
 				}
 			break;
 			case 'state':
@@ -152,22 +192,8 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 					$value = NULL;
 				}
 			break;
-			
+
 		}
 		return parent::edit($object, $field, $value, $format, $params);
-	}
-	
-	private function getGroupOptions($type, array $contentsByTypeGroup) {
-		static $results = array();
-		if (!isset($results[$type])) {
-			$options = SsoGroup::getActive($type);
-			$elements = $contentsByTypeGroup[$type];
-			foreach($options as $k => $v) {
-				$options[$k] = array('value' => $v.' ('.$elements[$k]['count'].')', 'title' => implode("\n", $elements[$k]['tooltip']));
-			}
-			$results[$type] = $options;
-		}
-	
-		return $results[$type];
 	}
 }

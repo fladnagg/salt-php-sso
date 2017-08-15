@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * CSS file for SSO menu, with user preferences
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\css
+ */
+namespace sso;
 
 /***
  * We have to load all classes... because we wanted to check theme css last modified time, so we have to load Theme class
@@ -29,20 +36,20 @@ $theme = $profil->getThemeObject();
 
 if (!headers_sent()) {
 	header('Content-type: text/css; charset: '.SSO_CHARSET);
-	
+
 	if (($profil->path === SsoProfil::PREVIEW_KEY)) {
-		SsoProfil::clearPreview(); // never send a 304 on preview
+		SsoProfil::clearPreview(); // never send a 304 on preview and never show twice
 	} else {
 		$lastModifiedTime = max(filemtime(__FILE__), filemtime($theme->getCssFile()));
-		
+
 		if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && ($_SERVER['HTTP_IF_NONE_MATCH'] === $_SERVER['QUERY_STRING'])
 		&& isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && (@strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $lastModifiedTime)) {
 			header($_SERVER['SERVER_PROTOCOL'].' 304 Not Modified');
 			die();
 		}
-		
+
 		// headers for cache
-		header('Etag: '.$_SERVER['QUERY_STRING']); // php 5.1.2+ prevent header injection, no need of escape here 
+		header('Etag: '.$_SERVER['QUERY_STRING']); // php 5.1.2+ prevent header injection, no need of escape here
 		header('Last-Modified: '.gmdate(DATE_RFC1123, $lastModifiedTime).' GMT');
 	}
 }
@@ -50,13 +57,13 @@ if (!headers_sent()) {
 echo $theme->displayCss();
 
 $recommended = ($profil->userId === NULL)?'TRUE':'FALSE';
-// Add some information in css builded file 
+// Add some information in css builded file
 echo <<<INFOS
 
 /*
 Theme : {$theme->id}
 Profil : {$profil->id}
-Application : {$profil->appliId}: {$profil->path} 
+Application : {$profil->appliId}: {$profil->path}
 Recommended : {$recommended}
 */
 INFOS;

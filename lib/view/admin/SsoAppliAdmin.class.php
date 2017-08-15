@@ -1,13 +1,25 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoAppliAdmin class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\view\admin
+ */
+namespace sso;
 
 use salt\Base;
 use salt\DeleteQuery;
 
+/**
+ * Class for Application admin
+  */
 class SsoAppliAdmin extends SsoAdmin {
-	
-	
+
+	/**
+	 * Build a new Application admin class
+	 */
 	public function __construct() {
-		$this->title = 'Applications';
+		$this->title = L::admin_appli;
 		$this->object = SsoAppli::singleton();
 		$this->searchFields = array('path', 'name');
 		$this->modifiableFields = array('path', 'name', 'handler', 'icon', 'groups');
@@ -15,48 +27,58 @@ class SsoAppliAdmin extends SsoAdmin {
 		$this->newFields = array('path', 'name', 'handler', 'icon');
 		$this->hideFields = array();
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $obj object
+	 * @see \sso\SsoAdmin::displayName()
+	 */
 	public function displayName(Base $obj) {
-		return 'L\'application '.$obj->name;
+		return '['.$obj->name.']';
 	}
-	
-	public function isFemaleName() {
-		return TRUE;
-	}
-	
-	
-	public function createFrom(array $datas) {
+
+	/**
+	 * {@inheritDoc}
+	 * @param mixed[] $data key => value
+	 * @see \sso\SsoAdmin::createFrom()
+	 */
+	public function createFrom(array $data) {
 		$obj = $this->object->getNew();
 
-		if ((strlen(trim($datas['path'])) > 0) && (substr($datas['path'], 0, 1) !== '/')) {
-			$datas['path'] = '/'.$datas['path'];
+		if ((strlen(trim($data['path'])) > 0) && (substr($data['path'], 0, 1) !== '/')) {
+			$data['path'] = '/'.$data['path'];
 		}
-			
-		if ((strlen(trim($datas['icon'])) > 0) && (substr($datas['icon'], 0, 1) !== '/')) {
-			$datas['icon'] = '/'.$datas['icon'];
+
+		if ((strlen(trim($data['icon'])) > 0) && (substr($data['icon'], 0, 1) !== '/')) {
+			$data['icon'] = '/'.$data['icon'];
 		}
-		
-		$obj->path = $datas['path'];
-		$obj->name = $datas['name'];
-		$obj->icon = $datas['icon'];
-		$obj->handler = $datas['handler'];
-		
+
+		$obj->path = $data['path'];
+		$obj->name = $data['name'];
+		$obj->icon = $data['icon'];
+		$obj->handler = $data['handler'];
+
 		if (!$obj->validate()) {
 			$this->addError($obj->lastError());
 			return NULL;
 		}
 		return $obj;
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $obj the object to delete
+	 * @see \sso\SsoAdmin::relatedObjectsDeleteQueries()
+	 */
 	public function relatedObjectsDeleteQueries(Base $obj) {
-		
+
 		$result = array();
-		
+
 		$q = SsoCredential::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('appli', '=', $obj->id);
 		$result[] = $q;
-		
+
 		$q = SsoGroupElement::deleteQuery();
 		$q->allowMultipleChange();
 		$q->whereAnd('ref_id', '=', $obj->id);
@@ -65,13 +87,19 @@ class SsoAppliAdmin extends SsoAdmin {
 
 		return $result;
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $obj the object to update
+	 * @param mixed[] $data key => value
+	 * @see \sso\SsoAdmin::updateFrom()
+	 */
 	public function updateFrom(Base $obj, array $data) {
 		$obj->path = $data['path'];
 		$obj->name = $data['name'];
 		$obj->handler = $data['handler'];
 		$obj->icon = $data['icon'];
-			
+
 		if ($obj->isModified() && !$obj->validate()) {
 			$this->addError($obj->lastError());
 			return NULL;

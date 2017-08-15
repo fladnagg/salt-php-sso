@@ -1,4 +1,11 @@
-<?php namespace sso;
+<?php
+/**
+ * SsoProfil class
+ *
+ * @author     Richaud Julien "Fladnag"
+ * @package    sso\lib\dao
+ */
+namespace sso;
 
 use salt\Base;
 use salt\Field;
@@ -8,25 +15,37 @@ use salt\DBHelper;
 use salt\SqlExpr;
 
 /**
- * @property int id
- * @property string userId
- * @property int appliId
- * @property string theme
- * @property boolean enabled
- * @property string options
+ * SsoProfil class. A Profil is a container for Theme class
+ *
+ * @property int $id
+ * @property string $userId
+ * @property int $appliId
+ * @property string $theme
+ * @property boolean $enabled
+ * @property string $options
  */
 class SsoProfil extends Base {
 
+	/** default theme ID */
 	const DEFAULT_THEME = 'menu';
+	/** recommended theme internal ID */
 	const RECOMMENDED_PROFILE = 'recommended';
 
+	/** menu.css.php key for preview theme, also used as application path for preview */
 	const PREVIEW_KEY = 'SSO_PREVIEW';
-	
+
+	/**
+	 * @var string[] list of internal profiles */
 	private static $internalProfiles = array(self::RECOMMENDED_PROFILE);
-	private static $themesList = NULL;
-	
+
+	/**
+	 * @var string Application path */
 	public $path = NULL; // not persisted
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @see \salt\Base::metadata()
+	 */
 	protected function metadata() {
 		parent::registerHelper(__NAMESPACE__.'\SsoProfilViewHelper');
 
@@ -34,33 +53,51 @@ class SsoProfil extends Base {
 			->registerId('id')
 			->registerTableName('sso_profile')
 			->registerFields(
-				Field::newNumber('id', 		'ID')->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
-				Field::newText(	'userId', 	'User', TRUE)->sqlType('VARCHAR(32)'),
-				Field::newNumber('appliId', 'Application'),
-				Field::newText(	'theme',	'Thème')->sqlType('VARCHAR(32)'),
-				Field::newBoolean('enabled','Actif'),
-				Field::newText(	'options',	'Options', FALSE)->sqlType('TEXT')
+				Field::newNumber('id', 		L::field_id)->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
+				Field::newText(	'userId', 	L::field_user, TRUE)->sqlType('VARCHAR(32)'),
+				Field::newNumber('appliId', L::field_application),
+				Field::newText(	'theme',	L::field_theme)->sqlType('VARCHAR(32)'),
+				Field::newBoolean('enabled',L::field_enabled),
+				Field::newText(	'options',	L::field_options, FALSE)->sqlType('TEXT')
 		);
 	}
-	
+
+	/**
+	 * Check is theme preview
+	 * @return TRUE if we set preview, FALSE otherwise
+	 */
 	public static function isPreview() {
 		$session = Session::getInstance();
 		return isset($session->SSO_PROFIL_PREVIEW);
 	}
-	
+
+	/**
+	 * Set theme preview
+	 * @param SsoProfil $profil The profile to preview
+	 */
 	public static function setPreview(SsoProfil $profil) {
 		$session = Session::getInstance();
 		$session->SSO_PROFIL_PREVIEW = $profil;
 	}
-	
+
+	/**
+	 * Remove theme preview
+	 */
 	public static function clearPreview() {
 		$session = Session::getInstance();
 		unset($session->SSO_PROFIL_PREVIEW);
 	}
 
+	/**
+	 * Initialize profiles
+	 *
+	 * set SSO_PROFIL key in session
+	 *
+	 * @param Sso $sso SSO instance
+	 */
 	public static function initProfiles(Sso $sso) {
 		$profiles = array();
-		
+
 		$q = SsoProfil::query(TRUE);
 		$q->whereAnd('enabled', '=', TRUE);
 		$qUser = $q->getSubQuery();
@@ -71,9 +108,9 @@ class SsoProfil extends Base {
 		$qAppli = SsoAppli::query();
 		$qAppli->selectField('path');
 		$q->join($qAppli, 'appliId', '=', $qAppli->id);
-		
+
 		$q->orderDesc('userId'); // NULL user at end : recommended profile
-		
+
 		$DB = DBHelper::getInstance('SSO');
 		foreach($DB->execQuery($q)->data as $p) {
 			if (!isset($profiles[$p->path.'/'])) {
@@ -82,11 +119,12 @@ class SsoProfil extends Base {
 		}
 		$sso->session->SSO_PROFIL = $profiles;
 	}
-	
+
 	/**
-	 * 
-	 * @param SsoClient $sso
-	 * @return SsoProfil 
+	 * Retrieve current profil to use
+	 * @param SsoClient $sso SSO instance
+	 * @param string $application application, for check again
+	 * @return SsoProfil profil to use
 	 */
 	public static function getCurrent(SsoClient $sso, $application = NULL) {
 		if (isset($sso->session->SSO_PROFIL_PREVIEW)) {
@@ -129,7 +167,14 @@ class SsoProfil extends Base {
 
 		return $result;
 	}
-	
+
+	/**
+	 * Create a new profile
+	 * @param int $appliId application ID. If NULL, use default theme, recommended theme otherwise
+	 * @param string $appliName application name
+	 * @param string $user User ID
+	 * @return \sso\SsoProfil the new profile
+	 */
 	public static function createNew($appliId, $appliName, $user) {
 		$profil = new SsoProfil(NULL, array('name', 'path'));
 		if ($appliId === NULL) {
@@ -144,32 +189,57 @@ class SsoProfil extends Base {
 		$profil->path = $appliId;
 		return $profil;
 	}
-	
+
+	/**
+	 * Retrieve all themes in "themes" directory
+	 * @return string[] themes as themeName => themeName
+	 */
 	public static function getThemesList() {
-		if (self::$themesList === NULL) {
+		static $themesList = NULL;
+
+		if ($themesList === NULL) {
 			// find existing themes
 			$themesPath = SSO_RELATIVE.'themes/';
 			$dir = opendir($themesPath);
-			$themesList = array();
+			$list = array();
 			while(($file = readdir($dir)) !== FALSE) {
 				if (is_dir($themesPath.$file) && (substr($file, 0, 1) !== '.') && (!self::isInternalTheme($file))) {
-					$themesList[] = $file;
+					$list[] = $file;
 				}
 			}
-			self::$themesList = array_combine($themesList, $themesList);
+			$themesList = array_combine($list, $list);
 		}
-		return self::$themesList;
+		return $themesList;
 	}
-	
+
+	/**
+	 * Check a theme is internal
+	 * @param string $theme theme name
+	 * @return boolean TRUE if internal, FALSE otherwise
+	 */
 	public static function isInternalTheme($theme) {
 		return in_array($theme, self::$internalProfiles);
 	}
-	
+
+	/**
+	 * Check a theme is valid
+	 *
+	 * @param string $theme theme name
+	 * @param int $appliId application ID
+	 * @return boolean TRUE if theme exists, or recommended (with appliId not null)
+	 */
 	public static function isThemeValid($theme, $appliId) {
 		$themes = self::getThemesList();
 		return isset($themes[$theme]) || (self::isInternalTheme($theme) && ($appliId !== NULL));
 	}
-	
+
+	/**
+	 * Retrieve internal profil for internal theme
+	 * @param SsoClient $sso SSO instance
+	 * @param int $appli Application ID
+	 * @param string $theme theme name
+	 * @return NULL|SsoProfil return NULL if theme is not an internal theme
+	 */
 	public static function getInternalProfile(SsoClient $sso, $appli, $theme) {
 		if (self::isInternalTheme($theme)) {
 
@@ -188,20 +258,25 @@ class SsoProfil extends Base {
 
 			$DB = DBHelper::getInstance('SSO');
 			$profile = \salt\first($DB->execQuery($q)->data);
-			
+
 			return $profile;
-			
+
 		}
 		return NULL;
 	}
-	
+
 	/**
+	 * Retrieve Theme object
 	 * @return Theme
 	 */
 	public function getThemeObject() {
 		return Theme::get($this);
 	}
-	
+
+	/**
+	 * Set the Theme object
+	 * @param Theme $theme
+	 */
 	public function setThemeObject(Theme $theme) {
 		Theme::set($this, $theme);
 	}
