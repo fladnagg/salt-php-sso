@@ -8,4 +8,4 @@
 namespace sso;
 
 /** Last SSO release version */
-define('sso\VERSION', '1.0.0');
+define('sso\VERSION', '1.0.1');
