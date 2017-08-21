@@ -52,7 +52,7 @@ if ($type === NULL) {
 }
 
 $groupable = is_object($SUBPAGES[$subpage]) && ($SUBPAGES[$subpage]->object instanceof SsoGroupable);
-$pagination = new Pagination($Input->G->RAW->offset);
+$pagination = new Pagination($Input->G->RAW->offset, 50);
 
 $searchFields = array();
 $modifiableFields = array();
@@ -494,9 +494,9 @@ ViewControl::edit();
 		</tr>
 	</table>
 </fieldset>
-<?= FormHelper::end() ?>
 
-<?php include(SSO_RELATIVE.'pages/layout/pagination.php'); ?>
+<?php include(SSO_RELATIVE.'pages/layout/pagination.php') ?>
+<?= FormHelper::end(); ?>
 
 <?php $params = array('*'); ?>
 <?php if ($editId !== '') $params+=array('type' => $type); ?>
