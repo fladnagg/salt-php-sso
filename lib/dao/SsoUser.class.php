@@ -82,7 +82,8 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 				Field::newText(	'password', 	L::field_password, TRUE)->sqlType('CHAR(41)')->displayOptions(array('size'=>20, 'type' => 'password')),
 				Field::newNumber('auth', 		L::field_auth_method, TRUE),
 				Field::newNumber('auth_group', 	L::field_auth_methods, TRUE),
-				Field::newText(	'lang', 		L::field_language, TRUE, SSO_LOCALE, Locale::availables())->sqlType('VARCHAR(32)'),
+				Field::newText(	'lang', 		L::field_language, TRUE, NULL, Locale::availables())->sqlType('VARCHAR(32)')
+															->displayOptions(array('options' => Locale::options())),
 				Field::newBoolean('admin', 		L::field_admin, FALSE, FALSE),
 				Field::newBoolean('restrictIP', 	L::field_restrict_ip, FALSE, FALSE),
 				Field::newBoolean('restrictAgent', 	L::field_restrict_agent, FALSE, TRUE),

@@ -7,10 +7,11 @@
  */
 namespace sso;
 
+use salt\I18n;
+use salt\Salt;
+
 // for documentation
 if (FALSE) {
-	/** Locale for SALT */
-	define('salt\I18N_LOCALE', 'en');
 	/** Current locale for SSO */
 	define('sso\SSO_CURRENT_LOCALE', 'en');
 }
@@ -22,20 +23,14 @@ class Locale {
 
 	/** Cookie name for locale */
 	const COOKIE_NAME = 'sso_locale';
-	/** Name of SALT locale constant */
-	const SALT_LOCALE = 'salt\I18N_LOCALE';
 	/** Name of SSO locale constant */
 	const SSO_CURRENT_LOCALE = 'sso\SSO_CURRENT_LOCALE';
 
 	/**
-	 * List all available locales, for SALT and SSO
-	 * @var mixed[] constant_name => [locale => locale name, locale...,  default locale => default locale name]
+	 * List of all available locales
+	 * @var string[] keys value of "locales" key in default locale
 	 */
-	private static $AVAILABLE_LOCALES = array(
-		// last locale will be set by default
-		self::SALT_LOCALE => array('fr' => 'Français', 'en' => 'English'),
-		self::SSO_CURRENT_LOCALE => array('fr' => 'Français', 'en' => 'English'),
-	);
+	private static $AVAILABLE_LOCALES = NULL;
 
 	/**
 	 * Initialize locales constants for SSO and SALT
@@ -48,27 +43,34 @@ class Locale {
 		}
 
 		$locales = self::retrieveLocales();
+		
+		Salt::config($locales); // SALT conf
 
-		foreach(self::$AVAILABLE_LOCALES as $const => $availables) {
-			if (!defined($const)) {
-				foreach($locales as $locale) {
-					if (in_array($locale, array_keys($availables))) {
-						/**
-						 * @ignore
-						 */
-						define($const, $locale);
-						break;
-					}
+		// retrieve available locale in default locale 
+		$i18n = I18n::getInstance('SSO', SSO_RELATIVE);
+		$default = $i18n->init(SSO_LOCALE)->get();
+		self::$AVAILABLE_LOCALES = array_keys($default::locales());
+
+		if (!defined(self::SSO_CURRENT_LOCALE)) {
+			foreach($locales as $locale) {
+				if (in_array($locale, self::$AVAILABLE_LOCALES)) {
+					/**
+					 * @ignore
+					 */
+					define(self::SSO_CURRENT_LOCALE, $locale);
+					break;
 				}
 			}
-			// not found : set to default locale
-			if (!defined($const)) {
-				/**
-				 * @ignore
-				 */
-				define($const, SSO_LOCALE);
-			}
 		}
+		// not found : set to default locale
+		if (!defined(self::SSO_CURRENT_LOCALE)) {
+			/**
+			 * @ignore
+			 */
+			define(self::SSO_CURRENT_LOCALE, SSO_LOCALE);
+		}
+
+		$i18n->init(SSO_CURRENT_LOCALE)->alias(__NAMESPACE__.'\L');
 
 		$init = TRUE;
 	}
@@ -79,12 +81,17 @@ class Locale {
 	 * @return boolean TRUE if cookie is set, FALSE otherwise.
 	 */
 	public static function set($locale) {
-		if (!isset(self::$AVAILABLE_LOCALES[self::SSO_CURRENT_LOCALE][$locale])) {
+		if (!in_array($locale, self::$AVAILABLE_LOCALES) && ($locale !== '')) {
 			$locale = NULL;
 		}
+
 		if (($locale !== NULL)
 		&& (!isset($_COOKIE[self::COOKIE_NAME]) || ($_COOKIE[self::COOKIE_NAME] !== $locale))) {
-			setcookie(self::COOKIE_NAME, $locale, time()+60*60*24*365, '/');
+			if ($locale === '') {
+				setcookie(self::COOKIE_NAME, $locale, time()-4200, '/'); // unset
+			} else {
+				setcookie(self::COOKIE_NAME, $locale, time()+60*60*24*365, '/');
+			}
 			return TRUE;
 		}
 		return FALSE;
@@ -121,11 +128,20 @@ class Locale {
 	}
 
 	/**
-	 * Retrieve all availables locales
+	 * Retrieve all availables locales for options display
 	 * @return string[] locale => locale text
 	 */
 	public static function availables() {
-		$locales = self::$AVAILABLE_LOCALES[self::SSO_CURRENT_LOCALE];
-		return $locales;
+		return array('' => L::label_locales_auto_text)+L::locales();
+	}
+	
+	/**
+	 * Return the options array for locales
+	 * @return mixed[] locale => text or array for FormHelper::select(...)
+	 */
+	public static function options() {
+		$options = self::availables();
+		$options[''] = array('value' => $options[''], 'title' => L::label_locales_auto_tooltip);
+		return $options;
 	}
 }

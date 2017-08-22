@@ -379,3 +379,11 @@ label:
     security_options: Options de sécurité
     statistics: Statistiques
     
+  locales:
+    auto_text: Automatique
+    auto_tooltip: Utiliser les préférences du navigateur
+
+# List all availables locales (sso AND salt)
+locales:
+  fr: Français
+  en: Anglais

@@ -20,10 +20,6 @@ if (file_exists($conf)) {
 /**** Version file ****/
 include_once implode(\DIRECTORY_SEPARATOR, array(__DIR__, '..', 'version.php'));
 
-/**** Retrieve language ****/
-require_once implode(DIRECTORY_SEPARATOR, array(__DIR__, 'Locale.class.php'));
-Locale::init();
-
 /**** Load SALT ****/
 set_include_path(get_include_path().\PATH_SEPARATOR.SALT_PATH);
 require_once('Salt.class.php');
@@ -32,25 +28,26 @@ use salt\Salt;
 use salt\In;
 use salt\I18n;
 
-/**** Configure ****/
 /** Relative path of SSO */
 define('sso\SSO_RELATIVE', Salt::relativePath(1));
 
-Salt::config(); // SALT conf
+/**** Retrieve language ****/
+require_once implode(DIRECTORY_SEPARATOR, array(__DIR__, 'Locale.class.php'));
+Locale::init(); // also configure SALT
 
+/**** Configure ****/
 Salt::addClassFolder(SSO_RELATIVE.'lib', __NAMESPACE__);
 Salt::addClassFolder(SSO_RELATIVE.'plugins'); // not in SSO namespace
-
-$i18n = I18n::getInstance('SSO', SSO_RELATIVE);
-$i18n->init(SSO_CURRENT_LOCALE)->alias(__NAMESPACE__.'\L');
 
 /**
  * Check all YAML locale files
  */
+// $i18n = I18n::getInstance('SSO');
 // $i18n->check(TRUE); die();
 /**
  * Generate all locales classes
  */
+// $i18n = I18n::getInstance('SSO');
 // $i18n->generate(TRUE); die();
 
 /**

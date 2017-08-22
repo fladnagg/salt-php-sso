@@ -377,3 +377,12 @@ label:
     security_options: Security options 
     statistics: Statistics
     
+  locales:
+    auto_text: Automatic
+    auto_tooltip: Use browser preferences
+
+# List all availables locales (sso AND salt)
+locales:
+  fr: French
+  en: English
+
