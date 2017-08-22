@@ -460,7 +460,7 @@ class SsoClient {
 		if (strpos($Input->S->RAW->REQUEST_URI, SSO_WEB_PATH) === 0) {
 			$id = 'sso'; // different URL on SSO because SSO do not use global theme
 		}
-		if (SsoProfil::isPreview()) {
+		if (SsoProfil::isPreview() || $Input->P->ISSET->preview) {
 			$id = SsoProfil::PREVIEW_KEY;
 		}
 
