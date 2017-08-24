@@ -26,7 +26,6 @@ require_once('Salt.class.php');
 
 use salt\Salt;
 use salt\In;
-use salt\I18n;
 
 /** Relative path of SSO */
 define('sso\SSO_RELATIVE', Salt::relativePath(1));
@@ -42,11 +41,13 @@ Salt::addClassFolder(SSO_RELATIVE.'plugins'); // not in SSO namespace
 /**
  * Check all YAML locale files
  */
+// use salt\I18n;
 // $i18n = I18n::getInstance('SSO');
 // $i18n->check(TRUE); die();
 /**
  * Generate all locales classes
  */
+// use salt\I18n;
 // $i18n = I18n::getInstance('SSO');
 // $i18n->generate(TRUE); die();
 

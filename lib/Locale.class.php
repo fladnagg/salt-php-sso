@@ -109,10 +109,12 @@ class Locale {
 			$locales[$locale] = $locale;
 		}
 
-		foreach(explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) as $locale) {
-			$locale = explode(';', $locale, 2);
-			$locale = self::normalizeLocale(reset($locale));
-			$locales[$locale] = $locale;
+		if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+			foreach(explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) as $locale) {
+				$locale = explode(';', $locale, 2);
+				$locale = self::normalizeLocale(reset($locale));
+				$locales[$locale] = $locale;
+			}
 		}
 
 		return $locales;
