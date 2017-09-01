@@ -22,10 +22,11 @@ class SsoAppliAdmin extends SsoAdmin {
 		$this->title = L::admin_appli;
 		$this->object = SsoAppli::singleton();
 		$this->searchFields = array('path', 'name');
-		$this->modifiableFields = array('path', 'name', 'handler', 'icon', 'groups');
+		$this->modifiableFields = array('path', 'name', 'description', 'handler', 'icon', 'groups');
 		$this->extraFields = array('groups');
 		$this->newFields = array('path', 'name', 'handler', 'icon');
-		$this->hideFields = array();
+		$this->hideFields = array('description');
+		$this->tooltipFields = array('description');
 	}
 
 	/**
@@ -99,6 +100,7 @@ class SsoAppliAdmin extends SsoAdmin {
 		$obj->name = $data['name'];
 		$obj->handler = $data['handler'];
 		$obj->icon = $data['icon'];
+		$obj->description = $data['description'];
 
 		if ($obj->isModified() && !$obj->validate()) {
 			$this->addError($obj->lastError());

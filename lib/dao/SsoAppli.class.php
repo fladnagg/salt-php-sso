@@ -22,6 +22,7 @@ use salt\SqlExpr;
  * @property int $id
  * @property string $path
  * @property string $name
+ * @property string $description
  * @property string $handler
  * @property string $icon
  */
@@ -45,6 +46,7 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 				Field::newNumber(	'id', 		L::field_id)->sqlType('INT PRIMARY KEY AUTO_INCREMENT'),
 				Field::newText(		'path', 	L::field_path)->sqlType('VARCHAR(64) UNIQUE'),
 				Field::newText(		'name', 	L::field_name)->sqlType('VARCHAR(64)'),
+				Field::newText(		'description', L::field_description, TRUE)->sqlType('TEXT')->displayOptions(array('type'=>'textarea', 'cols' => 100, 'rows' => 10)),
 				Field::newText(		'handler', 	L::field_handler)->sqlType('VARCHAR(128)')
 															->displayOptions(array('size'=>32)),
 				Field::newText(		'icon', 	L::field_image)->sqlType('VARCHAR(128)')

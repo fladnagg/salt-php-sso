@@ -200,7 +200,7 @@ class SsoClient {
 				$this->initApplication();
 			} catch (\Exception $ex) {
 				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout&reason='.self::AUTH_KO_INIT_APP, true, 303);
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error', true, 303);
 				die();
 			}
 		}

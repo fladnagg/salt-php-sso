@@ -102,10 +102,12 @@ foreach($newApplis->data as $row) {
 	}
 }
 
+$allApplis = array();
 $appliNames = array();
 if (count($existing) > 0) {
 	foreach(SsoAppli::search(array('id' => array_keys($existing)))->data as $row) {
 		$appliNames[$row->id] = $row->name;
+		$allApplis[$row->id] = $row;
 	}
 }
 
@@ -156,7 +158,7 @@ ViewControl::edit();
 <?php 	foreach($requests->columns as $col) {?>
 			<td>
 <?php 		if ($col === 'appli') {?>
-				<?= $Input->HTML($appliNames[$row->$col]) ?>
+				<div title="<?= $allApplis[$row->$col]->VIEW->description ?>" class="aide"><?= $allApplis[$row->$col]->VIEW->name ?></div>
 <?php  		} else if (($col === 'description') && (($row->status === SsoCredential::STATUS_REFUSED) || $row->isNew())) {?>
 				<?= $row->FORM->$col ?>
 <?php  		} else if (($col !== 'status') || !$row->isNew()) {?>
