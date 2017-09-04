@@ -256,33 +256,6 @@ class Sso extends SsoClient {
 	}
 
 	/**
-	 * Resume an application after login by redirect to it.
-	 */
-	public function resumeApplication() {
-		$uri = $this->session->SSO_REDIRECT;
-		unset($this->session->SSO_REDIRECT);
-
-		$params = array();
-
-		if ($this->session->SSO_GET !== NULL) {
-			$params = $this->session->SSO_GET;
-			unset($this->session->SSO_GET);
-
-			unset($params['sso_logout']);
-		}
-
-		if (count($params) > 0) {
-			$params = http_build_query($params);
-			$uri.='?'.$params;
-		}
-
-		session_write_close();
-
-		header('Location: '.$uri, true, 303);
-		die();
-	}
-
-	/**
 	 * Redirect to application list
 	 */
 	public function redirectApplications() {

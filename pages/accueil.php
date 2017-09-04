@@ -32,11 +32,11 @@ if ($Input->P->ISSET->sso_user) {
 // if we are at login page with a logged session, we redirect on apps list page or previous app
 if ($sso->isLogged()) {
 	// resume only if we came from a page, not if we access to sso directly
-	if ($Input->S->ISSET->HTTP_REFERER && $sso->checkCredentials($sso->session->SSO_REDIRECT)) {
+	if ($Input->S->ISSET->HTTP_REFERER) {
 		$sso->resumeApplication();
-	} else {
-		$sso->redirectApplications();
 	}
+	// if we don't have been redirected, display app list
+	$sso->redirectApplications();
 }
 
 if ($sso->getUser() !== NULL) {
@@ -63,7 +63,7 @@ if ($sso->getUser() !== NULL) {
 	<?= FormHelper::post() ?>
 	<h2><?= $Input->HTML(L::label_welcome_login_text) ?></h2>
 <?php if ($error !== NULL) { ?>
-<?php 	error_log('[SSO][Warning] '.$error); ?>
+<?php 	error_log('SSO - Warning - '.$error); ?>
 		<div class="errors"><?= $Input->HTML(L::error_login) ?></div>
 <?php } ?>
 

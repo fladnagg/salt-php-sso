@@ -16,9 +16,7 @@ namespace sso;
 			// Maybe credentials have changed since last login : refresh them from base
 			$sso->refreshUser();
 			// and retry access
-			if ($sso->checkCredentials($sso->session->SSO_REDIRECT)) {
-				$sso->resumeApplication();
-			}
+			$sso->resumeApplication();
 		}
 		if ($Input->G->RAW->from === 'init_error') {
 			// an error occured during application init

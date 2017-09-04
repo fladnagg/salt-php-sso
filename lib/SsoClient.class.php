@@ -190,24 +190,59 @@ class SsoClient {
 			$this->session->freeze();
 		}
 
-		if (!$authOnly) {
-			if (!$this->checkCredentials($fromURL)) {
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client', true, 303);
-				die();
-			}
-
-			try {
-				$this->initApplication();
-			} catch (\Exception $ex) {
-				error_log('SSO APP INIT ERROR: '.$ex->getMessage().' ('.__FILE__.':'.__LINE__.')');
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error', true, 303);
-				die();
-			}
-		}
-
 		return $this->getUser();
 	}
 
+	/**
+	 * Redirect to current application (setted by auth() in session->SSO_REDIRECT)
+	 * 
+	 * If user have credentials for this application, call the init handler and redirect.<br/>
+	 * If not, redirect to Application List page
+	 */
+	public function resumeApplication() {
+		
+		$uri = $this->session->SSO_REDIRECT;
+		
+		if ($uri === NULL) {
+			return;
+		}
+		$Input = In::getInstance();
+		if (!$this->checkCredentials($uri)) {
+			if ($Input->G->RAW->from !== 'client') {
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client', TRUE, 303);
+			} else {
+				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=forbidden', TRUE, 303);
+			}
+			die();
+		}
+		try {
+			$this->initApplication();
+		} catch (\Exception $ex) {
+			header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error', TRUE, 303);
+			die();
+		}
+
+		unset($this->session->SSO_REDIRECT);
+		
+		$params = array();
+		
+		if ($this->session->SSO_GET !== NULL) {
+			$params = $this->session->SSO_GET;
+			unset($this->session->SSO_GET);
+			
+			unset($params['sso_logout']);
+		}
+		
+		if (count($params) > 0) {
+			$params = http_build_query($params);
+			$uri.='?'.$params;
+		}
+		
+		session_write_close();
+		header('Location: '.$uri, TRUE, 303);
+		die();
+	}
+	
 	/**
 	 * Check a fullpath is a subpath of a basepath
 	 *
