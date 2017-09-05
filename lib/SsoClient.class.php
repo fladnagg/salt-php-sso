@@ -151,37 +151,41 @@ class SsoClient {
 		return self::$logoutReasons[$reason];
 	}
 
-	/**
-	 * Check user is logged.
-	 *
-	 * Redirect user to login page if not.
-	 *
-	 * @param boolean $authOnly TRUE for do not check credentials
-	 * @param string $fromURL URL application to redirect after login
-	 * @return AuthUser return current user if logged, redirect to sso otherwise
-	 */
-	public function auth($authOnly = FALSE, $fromURL = NULL) {
+	public function setRedirectUrl($url, $init = FALSE) {
+		$redirect = NULL;
+		if (($url !== NULL) && !isset($_GET['sso_logout'])) {
+			$params = array();
+			$data = explode('?', $url, 2);
+			if (count($data) > 1) {
+				parse_str(\salt\last($data), $params);
+			}
+			$url = \salt\first($data);
+			$url = \salt\first(explode('?', $url, 2));
+			$redirect = array('url' => $url, 'params' => $params, 'init' => $init);
+		}
+		$this->session->SSO_REDIRECT = $redirect;
+	}
 
+	/**
+	 * Check if user is logged and make appropriate actions
+	 *
+	 * Redirect user to login page if not
+	 *
+	 * @param boolean $checkCredentials (default TRUE) FALSE for do not check credentials (only check sso login)
+	 * @param boolean $initApplication (default TRUE) FALSE for do not call application handler
+	 * @param boolean $redirect (default FALSE) TRUE for redirect to application
+	 * @return AuthUser return current user if logged
+	 */
+	public function auth($checkCredentials = TRUE, $initApplication= TRUE, $redirect = FALSE) {
 		$Input = In::getInstance();
 
 		$state = $this->checkUserAuth();
 
-		if ($fromURL === NULL) {
-			$fromURL = $Input->S->RAW->REQUEST_URI;
-			$params = $_GET;
-		} else {
-			$params = array();
-			$data = explode('?', $fromURL, 2);
-			if (count($data) > 1) {
-				parse_str(\salt\last($data), $params);
-			}
-			$fromURL = \salt\first($data);
-		}
-		if (!$authOnly) {
-			$this->session->SSO_REDIRECT = \salt\first(explode('?', $fromURL, 2));
-			$this->session->SSO_GET = $params;
-		}
 		if ($state !== self::AUTH_OK) {
+			if ($checkCredentials && ($this->session->SSO_REDIRECT === NULL) && !$this->isSsoPage()) {
+				$this->setRedirectUrl($Input->S->RAW->REQUEST_URI);
+			}
+
 			header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.$state, true, 303);
 			die();
 		}
@@ -189,54 +193,77 @@ class SsoClient {
 		if (!$this->isSsoPage()) {
 			$this->session->freeze();
 		}
+		
+		$url = $Input->S->RAW->REQUEST_URI;
+
+		if ($checkCredentials) {
+
+			$from = $this->session->SSO_REDIRECT;
+			if ($from !== NULL) {
+				$url = $from['url'];
+				$initApplication = $from['init'];
+			}
+
+			if ($this->isSsoPage($url)) {
+				$initApplication = FALSE;
+
+			} else if (!$this->checkCredentials($url)) {
+				if ($Input->G->ISSET->from && ($Input->G->RAW->from !== 'client')) {
+					header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client', TRUE, 303);
+				} else {
+					header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=forbidden', TRUE, 303);
+				}
+				die();
+			}
+
+			
+			if ($initApplication) {
+				try {
+					$this->initApplication();
+				} catch (\Exception $ex) {
+					header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error', TRUE, 303);
+					die();
+				}
+			}
+			
+			if ($redirect) {
+				$this->resumeApplication();
+			}
+		}
 
 		return $this->getUser();
 	}
 
+	
+	
 	/**
-	 * Redirect to current application (setted by auth() in session->SSO_REDIRECT)
+	 * Redirect to current application (setted by setRedirectUrl() in session->SSO_REDIRECT)
 	 * 
 	 * If user have credentials for this application, call the init handler and redirect.<br/>
 	 * If not, redirect to Application List page
 	 */
-	public function resumeApplication() {
+	private function resumeApplication() {
 		
-		$uri = $this->session->SSO_REDIRECT;
+		$from = $this->session->SSO_REDIRECT;
 		
-		if ($uri === NULL) {
+		if ($from === NULL) {
 			return;
 		}
-		$Input = In::getInstance();
-		if (!$this->checkCredentials($uri)) {
-			if ($Input->G->RAW->from !== 'client') {
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client', TRUE, 303);
-			} else {
-				header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=forbidden', TRUE, 303);
-			}
-			die();
-		}
-		try {
-			$this->initApplication();
-		} catch (\Exception $ex) {
-			header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error', TRUE, 303);
-			die();
-		}
 
-		unset($this->session->SSO_REDIRECT);
-		
-		$params = array();
-		
-		if ($this->session->SSO_GET !== NULL) {
-			$params = $this->session->SSO_GET;
-			unset($this->session->SSO_GET);
-			
+		$uri = $from['url'];
+		$params = $from['params'];
+
+		if ($params !== NULL) {
 			unset($params['sso_logout']);
 		}
-		
+
 		if (count($params) > 0) {
 			$params = http_build_query($params);
 			$uri.='?'.$params;
 		}
+		
+		// on supprime pour éviter d'y retourner la prochaine fois
+		$this->setRedirectUrl(NULL);
 		
 		session_write_close();
 		header('Location: '.$uri, TRUE, 303);
@@ -263,16 +290,22 @@ class SsoClient {
 	}
 
 	/**
-	 * Check current page is a SSO page
+	 * Check current or provided page is a SSO page
+	 * @param string $url URL to check, NULL will check current page
 	 * @return boolean TRUE if it's an SSO page
 	 */
-	private function isSsoPage() {
-		$Input = In::getInstance();
+	private function isSsoPage($url = NULL) {
+		static $isSsoPage = array();
+		
+		if ($url === NULL) {
+			$Input = In::getInstance();
+			$url = $Input->S->RAW->REQUEST_URI;
+		}
 
-		$req = $Input->S->RAW->REQUEST_URI;
-		return $this->isSubPath($req, SSO_WEB_PATH);
-
-		return FALSE;
+		if (!isset($isSsoPage[$url])) {
+			$isSsoPage[$url] = $this->isSubPath($url, SSO_WEB_PATH);
+		}
+		return $isSsoPage[$url];
 	}
 
 	/**
@@ -337,8 +370,9 @@ class SsoClient {
 	public function clientError($code, $message, $file, $line) {
 		$Input = In::getInstance();
 		error_log('SSO APP INIT ERROR: '.$message.' ('.$file.':'.$line.')');
-		header('Location: '.SSO_WEB_RELATIVE.'index.php?sso_logout&reason='.self::AUTH_KO_INIT_APP, true, 303);
-		die();
+		// do nothing, will be redirected later
+		//header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.self::AUTH_KO_INIT_APP, true, 303);
+		//die();
 
 	}
 

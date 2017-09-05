@@ -140,7 +140,7 @@ class SsoProfil extends Base {
 
 		if (!isset($sso->session->SSO_PROFIL) || !is_array($sso->session->SSO_PROFIL)) {
 			$sso->session->logout();
-			$sso->auth(TRUE); // force display login page
+			$sso->auth(FALSE); // force display login page
 		}
 
 		if (($application === NULL) && (strpos($Input->S->RAW->REQUEST_URI, SSO_WEB_PATH) === 0)) { // force default theme on SSO

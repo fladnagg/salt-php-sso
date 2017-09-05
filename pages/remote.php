@@ -8,8 +8,8 @@
 namespace sso;
 
 if ($Input->G->ISSET->return_url) {
-	$sso->auth(FALSE, $Input->G->RAW->return_url);
-	$sso->resumeApplication();
+	$sso->setRedirectUrl($Input->G->RAW->return_url, TRUE);
+	$sso->auth(TRUE, TRUE, TRUE);
 }
 
 if (!$sso->isLogged()) {

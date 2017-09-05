@@ -77,7 +77,7 @@ if (is_array($pages)) {
 }
 
 if (($page !== NULL) && ($page !== 'init')) { // we need to be auth before access to another page of the SSO
-	$sso->auth(TRUE);
+	$sso->auth(FALSE);
 }
 
 /** SSO page title */

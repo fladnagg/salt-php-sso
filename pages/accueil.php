@@ -33,7 +33,7 @@ if ($Input->P->ISSET->sso_user) {
 if ($sso->isLogged()) {
 	// resume only if we came from a page, not if we access to sso directly
 	if ($Input->S->ISSET->HTTP_REFERER) {
-		$sso->resumeApplication();
+		$sso->auth(TRUE, FALSE, TRUE);
 	}
 	// if we don't have been redirected, display app list
 	$sso->redirectApplications();

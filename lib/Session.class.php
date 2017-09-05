@@ -14,8 +14,7 @@ use salt\In;
  *
  * @property int $SSO_TIMEOUT timeout of the session cookie
  * @property mixed[] $SSO_GLOBALS list of variables to register/define in application handlers
- * @property string $SSO_REDIRECT previous url to redirect after login
- * @property string $SSO_GET previous query to reuse after login
+ * @property mixed[] $SSO_REDIRECT data (url, params, etc...) for redirect after login
  * @property mixed[] $SSO_CREDENTIALS list of credentials applications for current user
  * @property string $SSO_LOGIN user id
  * @property boolean $SSO_checkIP TRUE if we have to check IP on each page
@@ -85,11 +84,9 @@ class Session {
 		session_start();
 
 		$this->data =& $_SESSION;
-
 		$Input = In::getInstance();
 		if ($Input->G->ISSET->sso_logout) {
 			$this->logout();
-			$Input->G->SET->sso_logout = NULL;
 		}
 
 		if (!isset($this->SSO_GLOBALS)) {
