@@ -47,7 +47,7 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 		$authUser = \salt\first($this->search($user, $options));
 
 		if ($authUser !== NULL) {
-			$st = $db->execSQL($options->authQuery, array(':user' => $user, ':password' => $pass));
+			$st = $db->execSQL($options->authQuery, array('user' => $user, 'password' => $pass));
 			if ($st->rowCount() > 0) {
 				$authUser->logged();
 			} else {
@@ -78,7 +78,7 @@ class SsoAuthMethodDatabase implements SsoAuthMethodInterface {
 		$authUsers = array();
 
 		if (!is_array($search)) {
-			$search = array(':user' => $search);
+			$search = array('user' => $search);
 		} else {
 			return $authUsers; // not implemented: how search to other fields without placeholders ?
 		}
