@@ -186,7 +186,7 @@ class SsoClient {
 				$this->setRedirectUrl($Input->S->RAW->REQUEST_URI);
 			}
 
-			header('Location: '.SSO_WEB_RELATIVE.'index.php?reason='.$state, true, 303);
+			$this->technicalRedirectTo(SSO_WEB_RELATIVE.'index.php?reason='.$state);
 			die();
 		}
 
@@ -209,9 +209,9 @@ class SsoClient {
 
 			} else if (!$this->checkCredentials($url)) {
 				if ($Input->G->ISSET->from && ($Input->G->RAW->from !== 'client')) {
-					header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=client', TRUE, 303);
+					$this->technicalRedirectTo(SSO_WEB_RELATIVE.'index.php?page=apps&from=client');
 				} else {
-					header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=forbidden', TRUE, 303);
+					$this->technicalRedirectTo(SSO_WEB_RELATIVE.'index.php?page=apps&from=forbidden');
 				}
 				die();
 			}
@@ -221,7 +221,7 @@ class SsoClient {
 				try {
 					$this->initApplication();
 				} catch (\Exception $ex) {
-					header('Location: '.SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error', TRUE, 303);
+					$this->technicalRedirectTo(SSO_WEB_RELATIVE.'index.php?page=apps&from=init_error');
 					die();
 				}
 			}
@@ -266,7 +266,8 @@ class SsoClient {
 		$this->setRedirectUrl(NULL);
 		
 		session_write_close();
-		header('Location: '.$uri, TRUE, 303);
+		
+		$this->technicalRedirectTo($uri);
 		die();
 	}
 	
@@ -627,4 +628,21 @@ JS;
 		);
 	}
 
+	/**
+	 * Redirect to another page
+	 * 
+	 * @param string $page the page, from server root
+	 * @param int $code HTTP code, default 303 
+	 * @param boolean $allowCaching FALSE by default, set to TRUE for not send HTTP headers prevent redirection caching 
+	 */
+	public function technicalRedirectTo($page, $code = 303, $allowCaching = FALSE) {
+		if (!$allowCaching) {
+			header('Cache-Control: no-cache, no-store, must-revalidate');
+			header('Pragma: no-cache');
+			header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', 0));
+		}
+
+		header('Location: '.$page, TRUE, $code);
+	}
+	
 }
