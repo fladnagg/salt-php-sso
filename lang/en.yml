@@ -115,6 +115,7 @@ field:
   auth_methods: Authentication methods
   language: Language
   admin: Administrator
+  can_ask: Can request access to other applications
   restrict_ip: Check IP
   restrict_agent: Check User-Agent
   session_duration: Session duration
@@ -226,7 +227,7 @@ help:
   auth:
     default: Will be used in alphabetical order if no authentication method is set for a user.
     create: A new user authenticated from this method will be dynamically created in the SSO. Otherwise, the user will still be created, but without access and his account will require validation by administrator.
-  ask: You can ask why you want an access in "Description" field
+  ask: You can tell why you want an access in "Description" field
   user:
     check_ip: >
       At each access, we will check that the IP address of the user is the same that the IP address used during login. 

@@ -49,6 +49,9 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 	public function text(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		switch($field->name) {
+			case 'restrictIP' :
+			case 'restrictAgent' :
+			case 'can_ask' :
 			case 'admin' :
 				return ($value == 1)?L::yes : L::no;
 				break;
@@ -99,10 +102,6 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 					return $Input->HTML(L::no);
 				}
 			break;
-			case 'restrictIP' :
-			case 'restrictAgent' :
-				return $Input->HTML(($value)?L::yes : L::no);
-			break;
 			case 'timeout' :
 				$result = '';
 				foreach(SsoUser::intTimeoutToArray($value) as $k => $v) {
@@ -127,6 +126,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 		global $Input;
 
 		static $authsMethods = NULL;
+		static $applications = NULL;
 
 		switch ($field->name) {
 			case 'timeout' :
@@ -178,14 +178,32 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 				;
 
 				return $result;
-
+			break;
+			
+			case 'auths':
+				if ($format === 'search') {
+					if ($applications === NULL) {
+						$applications = array('' => '');
+						foreach(SsoAppli::search(array())->data as $appli) {
+							$applications[$appli->id] = $appli->name;
+						}
+					}
+					return FormHelper::select('auths', $applications);
+				}
 			break;
 
+			case 'name':
+				if ($format === 'search') {
+					$params['size'] = 20;
+				}
+			break;
+			
 			case 'admin' :
 				if ($format === 'search') {
 					return FormHelper::select('admin', array('' => L::all, '1' => L::yes, '0' => L::no));
 				}
 			break;
+			
 			case 'state':
 				if ($format === 'search') {
 					$field->nullable = TRUE;

@@ -30,6 +30,7 @@ use salt\Dual;
  * @property int $auth_group
  * @property string $lang
  * @property boolean $admin
+ * @property boolean $can_ask
  * @property boolean $restrictIP
  * @property boolean $restrictAgent
  * @property int $timeout
@@ -85,6 +86,7 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 				Field::newText(	'lang', 		L::field_language, TRUE, NULL, Locale::availables())->sqlType('VARCHAR(32)')
 															->displayOptions(array('options' => Locale::options())),
 				Field::newBoolean('admin', 		L::field_admin, FALSE, FALSE),
+				Field::newBoolean('can_ask', 		L::field_can_ask, FALSE, TRUE),
 				Field::newBoolean('restrictIP', 	L::field_restrict_ip, FALSE, FALSE),
 				Field::newBoolean('restrictAgent', 	L::field_restrict_agent, FALSE, TRUE),
 				Field::newNumber('timeout', 		L::field_session_duration, FALSE, self::DEFAULT_TIMEOUT),
@@ -127,7 +129,13 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 
 		$q = SsoUser::query(TRUE);
 
-		if (isset($criteria[self::WITH_DETAILS])) {
+		$appliId = NULL;
+		if (isset($criteria['auths']) && is_numeric($criteria['auths'])) {
+			$appliId = $criteria['auths'];
+			unset($criteria['auths']);
+		}
+
+		if (isset($criteria[self::WITH_DETAILS]) || ($appliId !== NULL)) {
 			$gElem = SsoGroupElement::query(); // All groups linked to user
 			$gElem->whereAnd('type', '=', SsoGroupElement::TYPE_USER);
 			$q->join($gElem, 'id', '=', $gElem->ref_id, 'LEFT OUTER');
@@ -143,16 +151,19 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 			$gAppli->whereAnd('type', '=', SsoGroupElement::TYPE_APPLI);
 			$q->join($gAppli, $creds->appli_group, '=', $gAppli->group_id, 'LEFT OUTER');
 
-			$applis = SsoAppli::query(); // and finally all applications linked to credential or application group !
+			// and finally all applications linked to credential or application group !
+			$applis = SsoAppli::query();
 			$q->join($applis, $creds->appli, '=', $applis->id, 'LEFT OUTER');
 			$q->joinOnOr($applis, $gAppli->ref_id, '=', $applis->id);
+			if ($appliId !== NULL) {
+				$q->whereAnd($applis->id, '=', $appliId);
+			}
 
 			// All theses joins for compute this field : the list of application allowed for the user
 			$expr = $applis->name->distinct();
 			$expr->template(SqlExpr::TEMPLATE_MAIN.' ORDER BY 1 SEPARATOR '.SqlExpr::TEMPLATE_PARAM, self::GROUP_CONCAT_SEPARATOR_CHAR);
 			$q->select(SqlExpr::_GROUP_CONCAT($expr), 'auths');
 			$q->select(SqlExpr::text(1), 'password2');
-
 
 			$qGroupElem = SsoGroup::query(); // Group names linked to user
 			$q->join($qGroupElem, $gElem->group_id, '=', $qGroupElem->id, 'LEFT OUTER');

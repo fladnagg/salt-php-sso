@@ -115,6 +115,7 @@ field:
   auth_methods: Méthodes d'authentification
   language: Langue
   admin: Administrateur
+  can_ask: Peut demander l'accès à d'autres applications
   restrict_ip: Vérifier l'IP
   restrict_agent: Vérifier le User-Agent
   session_duration: Durée de la session

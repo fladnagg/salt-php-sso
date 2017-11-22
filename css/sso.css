@@ -171,6 +171,14 @@ fieldset.search td.legend {
   text-align:right;
 }
 
+fieldset.search td.filters {
+	text-align: center;
+}
+fieldset.search .filter {
+  display: inline-block;
+  padding: 1px 10px;
+  white-space: nowrap;
+}
 
 /*** Pagination ***/
 .pagination {

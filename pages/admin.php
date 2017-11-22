@@ -470,26 +470,31 @@ ViewControl::edit();
 
 	<table>
 		<tr>
-<?php FormHelper::withNameContainer('search') ?>
-	<?php foreach($searchFields as $f) {?>
-			<td class="legend"><?= $SUBPAGES[$subpage]->object->COLUMN($f) ?> :</td>
-			<td>
-			<?= $SUBPAGES[$subpage]->object->FORM('search')->$f; ?>
+			<td class="filters">
+<?php	FormHelper::withNameContainer('search') ?>
+<?php	foreach($searchFields as $f) {?>
+<?php		if (!$SUBPAGES[$subpage]->object->MODEL()->exists($f)) {?>
+<?php			$SUBPAGES[$subpage]->object->addExtraField($f) ?>
+<?php		} ?>
+				<div class="filter">
+					<span class="legend"><?= $SUBPAGES[$subpage]->object->COLUMN($f) ?> :</span>
+					<?= $SUBPAGES[$subpage]->object->FORM('search')->$f; ?>
+				</div>
+<?php	}?>
+<?php	if ($groupable) {?>
+				<div class="filter">
+					<span class="legend"><?= $Input->HTML(L::label_group) ?> :</span>
+					<?= SsoGroup::singleton()->FORM('list-'.$SUBPAGES[$subpage]->object->getGroupType())->name ?>
+				</div>
+<?php	} else if ($editId !== '') {?>
+				<div class="filter">
+					<span class="legend"><?= $Input->HTML(L::label_in_group) ?> :</span>
+<?php		$field = Field::newBoolean(SsoGroupable::EXISTS_NAME, NULL, TRUE); ?>
+					<?= FormHelper::field($field, SsoGroupable::EXISTS_NAME, NULL) ?>
+				</div>
+<?php	}?>
 			</td>
-	<?php }?>
-<?php 			if ($groupable) {?>
-			<td class="legend"><?= $Input->HTML(L::label_group) ?> :</td>
-			<td>
-				<?= SsoGroup::singleton()->FORM('list-'.$SUBPAGES[$subpage]->object->getGroupType())->name ?>
-			</td>
-<?php 			} else if ($editId !== '') {?>
-			<td class="legend"><?= $Input->HTML(L::label_in_group) ?> :</td>
-			<td>
-<?php 				$field = Field::newBoolean(SsoGroupable::EXISTS_NAME, NULL, TRUE); ?>
-				<?= FormHelper::field($field, SsoGroupable::EXISTS_NAME, NULL) ?>
-			</td>
-<?php 			}?>
-<?php FormHelper::withoutNameContainer() ?>
+<?php 	FormHelper::withoutNameContainer() ?>
 			<td><?= FormHelper::input('search_button', 'submit', L::button_filter) ?></td>
 		</tr>
 	</table>

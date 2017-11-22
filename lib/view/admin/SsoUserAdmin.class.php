@@ -25,11 +25,11 @@ class SsoUserAdmin extends SsoAdmin {
 	public function __construct() {
 		$this->title = L::admin_user;
 		$this->object = SsoUser::singleton();
-		$this->searchFields = array('id', 'name', 'admin', 'state');
-		$this->modifiableFields = array('name', 'auth', 'password', 'password2', 'state', 'admin', 'restrictIP', 'restrictAgent', 'timeout', 'groups', 'lang');
+		$this->searchFields = array('id', 'name', 'admin', 'state', 'auths');
+		$this->modifiableFields = array('name', 'auth', 'password', 'password2', 'state', 'admin', 'can_ask', 'restrictIP', 'restrictAgent', 'timeout', 'groups', 'lang');
 		$this->newFields = array('id', 'name', 'auth', 'password', 'password2', 'state', 'admin');
 		$this->extraFields = array('auths', 'groups');
-		$this->tooltipFields = array('lang', 'restrictIP', 'restrictAgent', 'timeout', 'password', 'last_login', 'login_count', 'last_failed_login', 'failed_login_count');
+		$this->tooltipFields = array('lang', 'restrictIP', 'restrictAgent', 'timeout', 'can_ask', 'password', 'last_login', 'login_count', 'last_failed_login', 'failed_login_count');
 		$this->hideFields = array_merge($this->tooltipFields, array('password2', 'auth_group'));
 	}
 
@@ -168,6 +168,7 @@ class SsoUserAdmin extends SsoAdmin {
 
 		$obj->restrictIP = array_key_exists('restrictIP', $data);
 		$obj->restrictAgent = array_key_exists('restrictAgent', $data);
+		$obj->can_ask= array_key_exists('can_ask', $data);
 		$obj->timeout = SsoUser::arrayToIntTimeout($data['timeout']);
 
 		$data['auth_group']='';

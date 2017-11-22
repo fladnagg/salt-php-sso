@@ -38,11 +38,15 @@ namespace sso;
 <?php
 	$apps = SsoCredential::getAllByUser($sso->getLogin());
 	$applis = SsoAppli::getByPath(array_keys($apps));
-
+	$user = SsoUser::getById($DB, $sso->getLogin());
+	
 	$staticTabs=array(
-			'list' => L::app_menu_list,
-			'ask' => L::app_menu_ask,
+		'list' => L::app_menu_list,
 	);
+	if ($user->can_ask) {
+		$staticTabs['ask'] = L::app_menu_ask;
+	}
+	
 	$tabs = $staticTabs;
 // 	$tabs[SSO_WEB_PATH] = 'SSO'; // not necessary : SSO will always use a top right menu
 	foreach($applis->data as $appli) {
