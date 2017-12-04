@@ -154,14 +154,8 @@ class SsoClient {
 	public function setRedirectUrl($url, $init = FALSE) {
 		$redirect = NULL;
 		if (($url !== NULL) && !isset($_GET['sso_logout'])) {
-			$params = array();
-			$data = explode('?', $url, 2);
-			if (count($data) > 1) {
-				parse_str(\salt\last($data), $params);
-			}
-			$url = \salt\first($data);
-			$url = \salt\first(explode('?', $url, 2));
-			$redirect = array('url' => $url, 'params' => $params, 'init' => $init);
+			$appli = \salt\first(explode('?', $url, 2));
+			$redirect = array('appli' => $appli, 'url' => $url, 'init' => $init);
 		}
 		$this->session->SSO_REDIRECT = $redirect;
 	}
@@ -194,20 +188,20 @@ class SsoClient {
 			$this->session->freeze();
 		}
 		
-		$url = $Input->S->RAW->REQUEST_URI;
+		$appli = $Input->S->RAW->REQUEST_URI;
 
 		if ($checkCredentials) {
 
 			$from = $this->session->SSO_REDIRECT;
 			if ($from !== NULL) {
-				$url = $from['url'];
+				$appli = $from['appli'];
 				$initApplication = $from['init'];
 			}
 
-			if ($this->isSsoPage($url)) {
+			if ($this->isSsoPage($appli)) {
 				$initApplication = FALSE;
 
-			} else if (!$this->checkCredentials($url)) {
+			} else if (!$this->checkCredentials($appli)) {
 				if ($Input->G->ISSET->from && ($Input->G->RAW->from !== 'client')) {
 					$this->technicalRedirectTo(SSO_WEB_RELATIVE.'index.php?page=apps&from=client');
 				} else {
@@ -250,24 +244,18 @@ class SsoClient {
 			return;
 		}
 
-		$uri = $from['url'];
-		$params = $from['params'];
+		$url = $from['url'];
+		// in theory, we cannot have an sso_logout in parameters
+		// but IF, we "disable" it with an extra underscore.
+		// the idea is to avoid redirect to url which trigger an instant logout
+		$url = preg_replace('#(\?.*sso_logout)#', '$1_', $url);
 
-		if ($params !== NULL) {
-			unset($params['sso_logout']);
-		}
-
-		if (count($params) > 0) {
-			$params = http_build_query($params);
-			$uri.='?'.$params;
-		}
-		
-		// on supprime pour éviter d'y retourner la prochaine fois
+		// remove for avoid redirect the next time
 		$this->setRedirectUrl(NULL);
 		
 		session_write_close();
 		
-		$this->technicalRedirectTo($uri);
+		$this->technicalRedirectTo($url);
 		die();
 	}
 	

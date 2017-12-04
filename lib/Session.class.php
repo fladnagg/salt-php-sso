@@ -14,7 +14,7 @@ use salt\In;
  *
  * @property int $SSO_TIMEOUT timeout of the session cookie
  * @property mixed[] $SSO_GLOBALS list of variables to register/define in application handlers
- * @property mixed[] $SSO_REDIRECT data (url, params, etc...) for redirect after login
+ * @property mixed[] $SSO_REDIRECT data (appli, url, etc...) for redirect after login
  * @property mixed[] $SSO_CREDENTIALS list of credentials applications for current user
  * @property string $SSO_LOGIN user id
  * @property boolean $SSO_checkIP TRUE if we have to check IP on each page

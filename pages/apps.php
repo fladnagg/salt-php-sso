@@ -27,7 +27,7 @@ namespace sso;
 		} else {
 			$from = $sso->session->SSO_REDIRECT;
 			$sso->session->SSO_REDIRECT = NULL;
-			$error = L::error_app_forbidden(($from !== NULL)?$from['url']:NULL);
+			$error = L::error_app_forbidden(($from !== NULL)?$from['appli']:NULL);
 		}
 	?>
 <?php 	if (isset($error)) {?>
