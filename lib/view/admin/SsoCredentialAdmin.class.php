@@ -51,22 +51,22 @@ class SsoCredentialAdmin extends SsoAdmin {
 		$data['appli_group']='';
 		$data['user_group']='';
 
-		if (strpos($data['appli'], SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0) {
-			$data['appli_group'] = substr($data['appli'], strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE));
+		if (strpos($data['appli'], SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0) {
+			$data['appli_group'] = substr($data['appli'], strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE));
 			$data['appli']='';
 		}
-		if (strpos($data['user'], SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0) {
-			$data['user_group'] = substr($data['user'], strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE));
+		if (strpos($data['user'], SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0) {
+			$data['user_group'] = substr($data['user'], strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE));
 			$data['user']='';
 		}
 
-		$obj->appli = $data['appli'];
-		$obj->user = $data['user'];
+		$obj->FORM->appli = $data['appli'];
+		$obj->FORM->user = $data['user'];
 
-		$obj->appli_group = $data['appli_group'];
-		$obj->user_group = $data['user_group'];
+		$obj->FORM->appli_group = $data['appli_group'];
+		$obj->FORM->user_group = $data['user_group'];
 
-		$obj->status = $data['status'];
+		$obj->FORM->status = $data['status'];
 
 		if (!$obj->validate()) {
 			$this->addError($obj->lastError());
@@ -87,21 +87,21 @@ class SsoCredentialAdmin extends SsoAdmin {
 		$data['appli_group']='';
 		$data['user_group']='';
 
-		if (strpos($data['appli'], SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0) {
-			$data['appli_group'] = substr($data['appli'], strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE));
+		if (strpos($data['appli'], SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0) {
+			$data['appli_group'] = substr($data['appli'], strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE));
 			$data['appli']='';
 		}
-		if (strpos($data['user'], SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0) {
-			$data['user_group'] = substr($data['user'], strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE));
+		if (strpos($data['user'], SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0) {
+			$data['user_group'] = substr($data['user'], strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE));
 			$data['user']='';
 		}
 
-		$obj->appli = $data['appli'];
-		$obj->user = $data['user'];
-		$obj->status = $data['status'];
-		$obj->user_group = $data['user_group'];
-		$obj->appli_group = $data['appli_group'];
-		$obj->description = $data['description'];
+		$obj->FORM->appli = $data['appli'];
+		$obj->FORM->user = $data['user'];
+		$obj->FORM->status = $data['status'];
+		$obj->FORM->user_group = $data['user_group'];
+		$obj->FORM->appli_group = $data['appli_group'];
+		$obj->FORM->description = $data['description'];
 
 		if ($obj->isModified() && !$obj->validate()) {
 			$this->addError(L::error_object_has_error($this->displayName($obj), $obj->lastError()));
@@ -147,12 +147,12 @@ class SsoCredentialAdmin extends SsoAdmin {
 			}
 		}
 		foreach($users as $k => $v) {
-			if (($v === '') || (strpos($v, SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0)) {
+			if (($v === '') || (strpos($v, SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0)) {
 				unset($users[$k]);
 			}
 		}
 		foreach($applis as $k => $v) {
-			if (($v === '') || (strpos($v, SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0)) {
+			if (($v === '') || (strpos($v, SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0)) {
 				unset($applis[$k]);
 			}
 		}

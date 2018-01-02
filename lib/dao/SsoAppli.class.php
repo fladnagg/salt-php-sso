@@ -36,9 +36,6 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 	 * @see \salt\Base::metadata()
 	 */
 	protected function metadata() {
-
-		parent::registerHelper(__NAMESPACE__.'\SsoAppliViewHelper');
-
 		self::MODEL()
 			->registerId('id')
 			->registerTableName('sso_appli')
@@ -223,20 +220,20 @@ class SsoAppli extends Base implements SsoAdministrable, SsoGroupable {
 
 		$serverHost = 'http://'.$Input->S->RAW->HTTP_HOST;
 		if (strlen(trim($this->path))===0) {
-			$this->lastError = L::error_app_path_missing;
+			$this->lastError = L::error_apps_path_missing;
 			return FALSE;
 		}
 
 		$url = $serverHost.$this->path;
 		if (!$this->urlExists($url)) {
-			$this->lastError = L::error_app_not_exists($url);
+			$this->lastError = L::error_apps_not_exists($url);
 			return FALSE;
 		}
 
 		if (strlen(trim($this->icon)) > 0) {
 			$image = $url.$this->icon;
 			if (!$this->urlExists($image)) {
-				$this->lastError = L::error_app_image_not_exists($image);
+				$this->lastError = L::error_apps_image_not_exists($image);
 				return FALSE;
 			}
 		}

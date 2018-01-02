@@ -47,8 +47,6 @@ class SsoAuthMethod extends Base implements SsoAdministrable, SsoGroupable {
 	 * @see \salt\Base::metadata()
 	 */
 	protected function metadata() {
-		parent::registerHelper(__NAMESPACE__.'\SsoAuthMethodViewHelper');
-
 		self::$TYPES = array(
 				self::TYPE_DB => new SsoAuthMethodDatabase(),
 				self::TYPE_LDAP => new SsoAuthMethodLdap(),

@@ -83,7 +83,7 @@ class SsoGroupAdmin extends SsoAdmin {
 			}
 		}
 
-		$obj->name = $data['name'];
+		$obj->FORM->name = $data['name'];
 		$obj->defaults = $defaults;
 		$obj->types = $types;
 
@@ -127,7 +127,7 @@ class SsoGroupAdmin extends SsoAdmin {
 	 */
 	public function updateFrom(Base $obj, array $data) {
 
-		$obj->name = $data['name'];
+		$obj->FORM->name = $data['name'];
 
 		$defaults = 0;
 		$types = 0;

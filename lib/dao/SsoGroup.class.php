@@ -31,9 +31,6 @@ class SsoGroup extends Base implements SsoAdministrable {
 	 * @see \salt\Base::metadata()
 	 */
 	protected function metadata() {
-
-		parent::registerHelper(__NAMESPACE__.'\SsoGroupViewHelper');
-
 		self::MODEL()
 			->registerId('id')
 			->registerTableName('sso_group')

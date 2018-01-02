@@ -14,6 +14,7 @@ require_once(__DIR__.\DIRECTORY_SEPARATOR.'SsoClient.class.php');
 use salt\Benchmark;
 use salt\DBHelper;
 use salt\In;
+use salt\FormHelper;
 
 Benchmark::start('page');
 
@@ -51,7 +52,7 @@ if ($Input->G->ISSET->page) {
 		}
 
 		if (array_key_exists('_'.$pageId, $pages)) {
-			if ($Input->G->ISSET->id === TRUE) {
+			if ($Input->G->ISSET->id) {
 				$pageId = '_'.$pageId;
 			} else {
 				// Access to internal page without ID ? forbidden

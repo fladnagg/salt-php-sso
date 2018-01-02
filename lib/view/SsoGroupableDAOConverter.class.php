@@ -1,6 +1,6 @@
 <?php
 /**
- * SsoGroupableViewHelper class
+ * SsoGroupableDAOConverter class
  *
  * @author     Richaud Julien "Fladnag"
  * @package    sso\view
@@ -8,25 +8,28 @@
 namespace sso;
 
 use salt\Base;
-use salt\BaseViewHelper;
+use salt\DAOConverter;
 use salt\Field;
 use salt\FormHelper;
 
 /**
- * Parent ViewHelper class for groupable objects
+ * Parent DAOConverter class for groupable objects
  */
-class SsoGroupableViewHelper extends BaseViewHelper {
+class SsoGroupableDAOConverter extends DAOConverter {
 
 	/** prefix for group values when select contain element AND group values */
 	const PREFIX_GROUP_VALUE = '__g';
 
-	/**
+		/**
 	 * {@inheritDoc}
+	 * @param Base $object The singleton object
 	 * @param Field $field the field to display
+	 * @param mixed $value the default value
 	 * @param string $format format to use for change the output
-	 * @see \salt\BaseViewHelper::column()
+	 * @param mixed $params others parameters
+	 * @see \salt\DAOConverter::column()
 	 */
-	public function column(Field $field, $format = NULL) {
+	public function column(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		switch($field->name) {
 			case SsoGroupable::WITH_GROUP:
@@ -38,7 +41,7 @@ class SsoGroupableViewHelper extends BaseViewHelper {
 				return $Input->HTML(L::admin_group);
 			break;
 		}
-		return parent::column($field, $format);
+		return parent::column($object, $field, $value, $format, $params);
 	}
 
 	/**
@@ -48,7 +51,7 @@ class SsoGroupableViewHelper extends BaseViewHelper {
 	 * @param mixed $value the value to edit
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::edit()
+	 * @see \salt\DAOConverter::edit()
 	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
@@ -113,7 +116,7 @@ JS;
 	 * @param mixed $value the value to display
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::show()
+	 * @see \salt\DAOConverter::show()
 	 */
 	public function show(Base $object, Field $field, $value, $format, $params) {
 		if ($field->name === SsoGroupable::GROUPS) {

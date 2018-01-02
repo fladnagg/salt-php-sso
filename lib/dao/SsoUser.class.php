@@ -72,8 +72,6 @@ class SsoUser extends Base implements SsoAdministrable, SsoGroupable {
 	 * @see \salt\Base::metadata()
 	 */
 	protected function metadata() {
-		parent::registerHelper(__NAMESPACE__.'\SsoUserViewHelper');
-
 		self::MODEL()
 			->registerId('id')
 			->registerTableName('sso_user')

@@ -75,10 +75,10 @@ class SsoAuthMethodAdmin extends SsoAdmin {
 	public function createFrom(array $data) {
 		$obj = $this->object->getNew();
 
-		$obj->name = $data['name'];
-		$obj->default = isset($data['default']);
-		$obj->create = isset($data['create']);
-		$obj->type = $data['type'];
+		$obj->FORM->name = $data['name'];
+		$obj->FORM->default = $data['default'];
+		$obj->FORM->create = $data['create'];
+		$obj->FORM->type = $data['type'];
 
 		return $obj;
 	}
@@ -91,12 +91,12 @@ class SsoAuthMethodAdmin extends SsoAdmin {
 	 */
 	public function updateFrom(Base $obj, array $data) {
 		if ($obj->type !== SsoAuthMethod::TYPE_LOCAL) {
-			$obj->options = $data['options'];
-			$obj->create = isset($data['create']);
+			$obj->FORM->options = $data['options'];
+			$obj->FORM->create = $data['create'];
 		}
 		// default & name are the only fields that can be changed on local auth method
-		$obj->name = $data['name'];
-		$obj->default = isset($data['default']);
+		$obj->FORM->name = $data['name'];
+		$obj->FORM->default = $data['default'];
 
 		return $obj;
 	}

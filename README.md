@@ -17,3 +17,8 @@ SSO (Single Sign On) for SALT framework
 
 ### Documentation 
 [https://salt-php.org/modules/sso/](https://salt-php.org/modules/sso/) in french
+
+### Migration from 1.0
+ALTER TABLE sso_user ADD COLUMN lang VARCHAR(32) NULL AFTER auth_group;
+ALTER TABLE sso_appli ADD COLUMN description TEXT NULL AFTER name;
+ALTER TABLE sso_user ADD COLUMN can_ask TINYINT(1) NOT NULL DEFAULT 1 AFTER admin ;

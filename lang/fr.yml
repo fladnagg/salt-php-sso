@@ -20,10 +20,11 @@ error:
     syntax: Syntaxe
     data: Données
 
-  app:
+  apps:
     path_missing: Le chemin de l'application est obligatoire.
     not_exists: "L'application n'existe pas : %s."
     image_not_exists: "L'image indiquée n'existe pas : %s."
+
   credential:
     user_missing: Un utilisateur ou un groupe d'utilisateur doit être indiqué.
     app_missing: Une application ou un groupe d'application doit être indiqué.

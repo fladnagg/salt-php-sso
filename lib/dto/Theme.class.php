@@ -34,7 +34,7 @@ abstract class Theme extends Base {
 	 * @throws BusinessException if theme is unknown
 	 * @return Theme the theme object in profile
 	 */
-	public static function get(SsoProfil $profil) {
+	public static function getTheme(SsoProfil $profil) {
 		$class = ucfirst(strtolower($profil->theme)).'Theme';
 		$file = SSO_RELATIVE.'themes/'.$profil->theme.'/'.$class.'.class.php';
 
@@ -69,7 +69,7 @@ abstract class Theme extends Base {
 	 * @param SsoProfil $profil The profile
 	 * @param Theme $theme The theme
 	 */
-	public static function set(SsoProfil $profil, Theme $theme) {
+	public static function setTheme(SsoProfil $profil, Theme $theme) {
 		$options = array();
 		foreach($theme->MODEL()->getFields() as $fieldName => $_) {
 			if ($fieldName !== 'id') {

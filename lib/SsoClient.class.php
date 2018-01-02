@@ -151,6 +151,11 @@ class SsoClient {
 		return self::$logoutReasons[$reason];
 	}
 
+	/**
+	 * Set the URL for redirect after login
+	 * @param string $url URL for redirect after login
+	 * @param boolean $init set to TRUE for initialize application before redirect
+	 */
 	public function setRedirectUrl($url, $init = FALSE) {
 		$redirect = NULL;
 		if (($url !== NULL) && !isset($_GET['sso_logout'])) {
@@ -187,7 +192,7 @@ class SsoClient {
 		if (!$this->isSsoPage()) {
 			$this->session->freeze();
 		}
-		
+
 		$appli = $Input->S->RAW->REQUEST_URI;
 
 		if ($checkCredentials) {
@@ -210,7 +215,7 @@ class SsoClient {
 				die();
 			}
 
-			
+
 			if ($initApplication) {
 				try {
 					$this->initApplication();
@@ -219,7 +224,7 @@ class SsoClient {
 					die();
 				}
 			}
-			
+
 			if ($redirect) {
 				$this->resumeApplication();
 			}
@@ -228,18 +233,18 @@ class SsoClient {
 		return $this->getUser();
 	}
 
-	
-	
+
+
 	/**
 	 * Redirect to current application (setted by setRedirectUrl() in session->SSO_REDIRECT)
-	 * 
+	 *
 	 * If user have credentials for this application, call the init handler and redirect.<br/>
 	 * If not, redirect to Application List page
 	 */
 	private function resumeApplication() {
-		
+
 		$from = $this->session->SSO_REDIRECT;
-		
+
 		if ($from === NULL) {
 			return;
 		}
@@ -252,13 +257,13 @@ class SsoClient {
 
 		// remove for avoid redirect the next time
 		$this->setRedirectUrl(NULL);
-		
+
 		session_write_close();
-		
+
 		$this->technicalRedirectTo($url);
 		die();
 	}
-	
+
 	/**
 	 * Check a fullpath is a subpath of a basepath
 	 *
@@ -285,7 +290,7 @@ class SsoClient {
 	 */
 	private function isSsoPage($url = NULL) {
 		static $isSsoPage = array();
-		
+
 		if ($url === NULL) {
 			$Input = In::getInstance();
 			$url = $Input->S->RAW->REQUEST_URI;
@@ -618,10 +623,10 @@ JS;
 
 	/**
 	 * Redirect to another page
-	 * 
+	 *
 	 * @param string $page the page, from server root
-	 * @param int $code HTTP code, default 303 
-	 * @param boolean $allowCaching FALSE by default, set to TRUE for not send HTTP headers prevent redirection caching 
+	 * @param int $code HTTP code, default 303
+	 * @param boolean $allowCaching FALSE by default, set to TRUE for not send HTTP headers prevent redirection caching
 	 */
 	public function technicalRedirectTo($page, $code = 303, $allowCaching = FALSE) {
 		if (!$allowCaching) {
@@ -632,5 +637,5 @@ JS;
 
 		header('Location: '.$page, TRUE, $code);
 	}
-	
+
 }

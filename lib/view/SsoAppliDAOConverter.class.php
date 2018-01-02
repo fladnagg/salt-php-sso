@@ -1,21 +1,21 @@
 <?php
 /**
- * SsoAppliViewHelper class
+ * SsoAppliDAOConverter class
  *
  * @author     Richaud Julien "Fladnag"
  * @package    sso\view
  */
 namespace sso;
 
-use salt\Field;
 use salt\Base;
+use salt\Field;
 use salt\FormHelper;
 use salt\Salt;
 
 /**
- * ViewHelper for SsoAppli
+ * DAOConverter for SsoAppli
  */
-class SsoAppliViewHelper extends SsoGroupableViewHelper {
+class SsoAppliDAOConverter extends SsoGroupableDAOConverter {
 
 	/**
 	 * @var string[] list of help texts : fieldName => helpText */
@@ -25,17 +25,20 @@ class SsoAppliViewHelper extends SsoGroupableViewHelper {
 		'icon' => L::help_appli_icon,
 	);
 
-	/**
+		/**
 	 * {@inheritDoc}
+	 * @param Base $object The singleton object
 	 * @param Field $field the field to display
+	 * @param mixed $value the default value
 	 * @param string $format format to use for change the output
-	 * @see \sso\SsoGroupableViewHelper::column()
+	 * @param mixed $params others parameters
+	 * @see \salt\DAOConverter::column()
 	 */
-	public function column(Field $field, $format = NULL) {
+	public function column(Base $object, Field $field, $value, $format, $params) {
 
 		global $Input;
 
-		$result = parent::column($field, $format);
+		$result = parent::column($object, $field, $value, $format, $params);
 
 		if (($format === 'columns') && isset(self::$HELP[$field->name])) {
 			$result.='&nbsp;<img src="'.SSO_WEB_RELATIVE.'images/help.png" alt="aide" title="'.$Input->HTML(self::$HELP[$field->name]).'" class="aide"/>';
@@ -51,7 +54,7 @@ class SsoAppliViewHelper extends SsoGroupableViewHelper {
 	 * @param mixed $value the value to edit
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \sso\SsoGroupableViewHelper::edit()
+	 * @see \sso\SsoGroupableDAOConverter::edit()
 	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 

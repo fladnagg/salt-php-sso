@@ -54,10 +54,10 @@ class SsoAppliAdmin extends SsoAdmin {
 			$data['icon'] = '/'.$data['icon'];
 		}
 
-		$obj->path = $data['path'];
-		$obj->name = $data['name'];
-		$obj->icon = $data['icon'];
-		$obj->handler = $data['handler'];
+		$obj->FORM->path = $data['path'];
+		$obj->FORM->name = $data['name'];
+		$obj->FORM->icon = $data['icon'];
+		$obj->FORM->handler = $data['handler'];
 
 		if (!$obj->validate()) {
 			$this->addError($obj->lastError());
@@ -96,11 +96,11 @@ class SsoAppliAdmin extends SsoAdmin {
 	 * @see \sso\SsoAdmin::updateFrom()
 	 */
 	public function updateFrom(Base $obj, array $data) {
-		$obj->path = $data['path'];
-		$obj->name = $data['name'];
-		$obj->handler = $data['handler'];
-		$obj->icon = $data['icon'];
-		$obj->description = $data['description'];
+		$obj->FORM->path = $data['path'];
+		$obj->FORM->name = $data['name'];
+		$obj->FORM->handler = $data['handler'];
+		$obj->FORM->icon = $data['icon'];
+		$obj->FORM->description = $data['description'];
 
 		if ($obj->isModified() && !$obj->validate()) {
 			$this->addError($obj->lastError());

@@ -1,6 +1,6 @@
 <?php
 /**
- * SsoProfilViewHelper class
+ * SsoProfilDAOConverter class
  *
  * @author     Richaud Julien "Fladnag"
  * @package    sso\view
@@ -8,13 +8,13 @@
 namespace sso;
 
 use salt\Base;
-use salt\BaseViewHelper;
+use salt\DAOConverter;
 use salt\Field;
 
 /**
- * ViewHelper for SsoProfil
+ * DAOConverter for SsoProfil
  */
-class SsoProfilViewHelper extends BaseViewHelper {
+class SsoProfilDAOConverter extends DAOConverter {
 
 	/**
 	 * {@inheritDoc}
@@ -23,7 +23,7 @@ class SsoProfilViewHelper extends BaseViewHelper {
 	 * @param mixed $value the value to edit
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::edit()
+	 * @see \salt\DAOConverter::edit()
 	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		switch ($field->name) {

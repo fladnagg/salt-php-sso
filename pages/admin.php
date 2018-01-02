@@ -477,7 +477,7 @@ ViewControl::edit();
 <?php			$SUBPAGES[$subpage]->object->addExtraField($f) ?>
 <?php		} ?>
 				<div class="filter">
-					<span class="legend"><?= $SUBPAGES[$subpage]->object->COLUMN($f) ?> :</span>
+					<span class="legend"><?= $SUBPAGES[$subpage]->object->COLUMN->$f ?> :</span>
 					<?= $SUBPAGES[$subpage]->object->FORM('search')->$f; ?>
 				</div>
 <?php	}?>
@@ -531,7 +531,7 @@ ViewControl::edit();
 <?php $extraCols = array(); ?>
 <?php $emptyCols = array(); ?>
 <?php foreach($displayFields as $i => $col) { ?>
-<?php 	$viewCol = $SUBPAGES[$subpage]->object->COLUMN($col, 'columns'); ?>
+<?php 	$viewCol = $SUBPAGES[$subpage]->object->COLUMN('columns')->$col; ?>
 <?php 	if (is_array($viewCol)) { ?>
 <?php 		$extraCols[$i-count($emptyCols)] = \salt\first(array_values($viewCol)); ?>
 		<th colspan="<?= count($extraCols[$i-count($emptyCols)])?>"><?= \salt\first(array_keys($viewCol)); ?></th>
@@ -556,7 +556,7 @@ ViewControl::edit();
 		<th>&nbsp;</th>
 <?php 		} else { ?>
 <?php 			foreach($extraCols[$i] as $col) {?>
-		<th><?= $SUBPAGES[$subpage]->object->COLUMN($col, 'subcolumns');?></th>
+		<th><?= $SUBPAGES[$subpage]->object->COLUMN('subcolumns')->$col;?></th>
 <?php 			}?>
 <?php 		}?>
 <?php 	}?>
@@ -606,9 +606,9 @@ JS;
 				$details = array();
 				foreach($SUBPAGES[$subpage]->tooltipFields as $tooltipField) {
 					if (strlen($row->$tooltipField) > 0) {
-						$tooltip[] = $row->COLUMN($tooltipField).' : '.$row->VIEW->{$tooltipField};
+						$tooltip[] = $row->COLUMN()->$tooltipField.' : '.$row->VIEW->{$tooltipField};
 					}
-					$detail = $row->COLUMN($tooltipField).': ';
+					$detail = $row->COLUMN()->$tooltipField.': ';
 					$detail.= $row->VIEW->$tooltipField;
 					$details[] = $detail;
 				}
@@ -639,7 +639,7 @@ JS;
 					<table>
 <?php 				foreach($changeDetails as $f) {?>
 						<tr>
-							<td class="field"><?= $row->COLUMN($f) ?></td>
+							<td class="field"><?= $row->COLUMN()->$f ?></td>
 							<td class="input"><?= $row->FORM($formContext)->$f ?></td>
 						</tr>
 <?php 				}?>

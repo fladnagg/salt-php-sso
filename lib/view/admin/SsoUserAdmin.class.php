@@ -55,22 +55,23 @@ class SsoUserAdmin extends SsoAdmin {
 			$this->addError(L::error_user_id_missing);
 			return NULL;
 		}
-		$obj->id = trim($data['id']);
-		$obj->name = trim($data['name']);
+		$obj->FORM->id = trim($data['id']);
+		$obj->FORM->name = trim($data['name']);
 
-		$obj->state = $data['state'];
+		$obj->FORM->state = $data['state'];
 
-		$obj->admin = array_key_exists('admin', $data);
+		$obj->FORM->admin = $data['admin'];
 		$obj->last_login = 1;
+		$obj->login_count = 0;
 
 		$data['auth_group']='';
-		if (strpos($data['auth'], SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0) {
-			$data['auth_group'] = substr($data['auth'], strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE));
+		if (strpos($data['auth'], SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0) {
+			$data['auth_group'] = substr($data['auth'], strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE));
 			$data['auth']='';
 		}
 
-		$obj->auth_group = $data['auth_group'];
-		$obj->auth = $data['auth'];
+		$obj->FORM->auth_group = $data['auth_group'];
+		$obj->FORM->auth = $data['auth'];
 
 		return $obj;
 	}
@@ -114,7 +115,7 @@ class SsoUserAdmin extends SsoAdmin {
 	public function updateFrom(Base $obj, array $data) {
 		global $sso;
 
-		$admin = array_key_exists('admin', $data);
+		$admin = ($data['admin'] == 1);
 		if (!$admin) {
 			if (($obj->id === $sso->getLogin()) && $obj->admin) {
 				$this->addError(L::error_user_admin_current);
@@ -130,7 +131,7 @@ class SsoUserAdmin extends SsoAdmin {
 			$this->addError(L::error_user_state_current);
 			return NULL;
 		}
-		$obj->state = $data['state'];
+		$obj->FORM->state = $data['state'];
 
 		if (trim($data['password']) !== '') { // password exists
 
@@ -148,7 +149,7 @@ class SsoUserAdmin extends SsoAdmin {
 			$q = Dual::query();
 
 			$q->select(SqlExpr::_PASSWORD($data['password'])->privateBinds(), 'pass');
-			$obj->password = \salt\first($DB->execQuery($q)->data)->pass;
+			$obj->FORM->password = \salt\first($DB->execQuery($q)->data)->pass;
 		} else if (($data['password'] === '') && ($obj->password !== '')) { // password removed
 
 			if ($obj->id === SSO_DB_USER) {
@@ -156,29 +157,29 @@ class SsoUserAdmin extends SsoAdmin {
 				return NULL;
 			}
 
-			$obj->password = '';
+			$obj->password = NULL;
 		}
 
-		$obj->name = $data['name'];
+		$obj->FORM->name = $data['name'];
 		if ($obj->id === $sso->getLogin()) {
 			$sso->session->SSO_USERNAME = $obj->name;
 		}
 
-		$obj->lang = $data['lang'];
+		$obj->FORM->lang = $data['lang'];
 
-		$obj->restrictIP = array_key_exists('restrictIP', $data);
-		$obj->restrictAgent = array_key_exists('restrictAgent', $data);
-		$obj->can_ask= array_key_exists('can_ask', $data);
-		$obj->timeout = SsoUser::arrayToIntTimeout($data['timeout']);
+		$obj->FORM->restrictIP = $data['restrictIP'];
+		$obj->FORM->restrictAgent = $data['restrictAgent'];
+		$obj->FORM->can_ask = $data['can_ask'];
+		$obj->FORM->timeout = $data['timeout'];
 
-		$data['auth_group']='';
-		if (strpos($data['auth'], SsoGroupableViewHelper::PREFIX_GROUP_VALUE) === 0) {
-			$data['auth_group'] = substr($data['auth'], strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE));
-			$data['auth']='';
+		$data['auth_group'] = '';
+		if (strpos($data['auth'], SsoGroupableDAOConverter::PREFIX_GROUP_VALUE) === 0) {
+			$data['auth_group'] = substr($data['auth'], strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE));
+			$data['auth'] = '';
 		}
 
-		$obj->auth_group = $data['auth_group'];
-		$obj->auth = $data['auth'];
+		$obj->FORM->auth_group = $data['auth_group'];
+		$obj->FORM->auth = $data['auth'];
 
 		return $obj;
 	}

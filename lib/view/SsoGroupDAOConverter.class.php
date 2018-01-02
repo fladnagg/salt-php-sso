@@ -1,6 +1,6 @@
 <?php
 /**
- * SsoGroupViewHelper class
+ * SsoGroupDAOConverter class
  *
  * @author     Richaud Julien "Fladnag"
  * @package    sso\view
@@ -8,14 +8,15 @@
 namespace sso;
 
 use salt\Base;
-use salt\BaseViewHelper;
+use salt\DAOConverter;
 use salt\Field;
 use salt\FormHelper;
+use salt\Model;
 
 /**
- * ViewHelper for Group class
+ * DAOConverter for Group class
  */
-class SsoGroupViewHelper extends BaseViewHelper {
+class SsoGroupDAOConverter extends DAOConverter {
 
 	/**
 	 * @var string[] help text by field : fieldName => helpText */
@@ -24,13 +25,17 @@ class SsoGroupViewHelper extends BaseViewHelper {
 		'default' => L::help_group_default,
 	);
 
+
 	/**
 	 * {@inheritDoc}
+	 * @param Base $object The singleton object
 	 * @param Field $field the field to display
+	 * @param mixed $value the default value
 	 * @param string $format format to use for change the output
-	 * @see \salt\BaseViewHelper::column()
+	 * @param mixed $params others parameters
+	 * @see \salt\DAOConverter::column()
 	 */
-	public function column(Field $field, $format = NULL) {
+	public function column(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 
 		$colValue = NULL;
@@ -78,7 +83,7 @@ class SsoGroupViewHelper extends BaseViewHelper {
 			}
 		}
 
-		return parent::column($field, $format);
+		return parent::column($object, $field, $value, $format, $params);
 	}
 
 	/**
@@ -88,7 +93,7 @@ class SsoGroupViewHelper extends BaseViewHelper {
 	 * @param mixed $value the value to edit
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::edit()
+	 * @see \salt\DAOConverter::edit()
 	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		global $Input;

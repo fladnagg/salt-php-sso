@@ -24,9 +24,9 @@ $oks = array();
 if ($Input->P->ISSET->submit) {
 	$user = SsoUser::findFromId($sso->getLogin());
 	if (strlen(trim($Input->P->RAW->name))===0) {
-		$user->name = '';
+		$user->FORM->name = '';
 	} else {
-		$user->name = $Input->P->RAW->name;
+		$user->FORM->name = $Input->P->RAW->name;
 	}
 
 	$changePassword = FALSE;
@@ -42,11 +42,11 @@ if ($Input->P->ISSET->submit) {
 		}
 	}
 
-	$user->restrictIP = $Input->P->ISSET->restrictIP;
-	$user->restrictAgent = $Input->P->ISSET->restrictAgent;
-	$user->timeout = SsoUser::arrayToIntTimeout($Input->P->RAW->timeout);
+	$user->FORM->restrictIP = $Input->P->ISSET->restrictIP;
+	$user->FORM->restrictAgent = $Input->P->ISSET->restrictAgent;
+	$user->FORM->timeout = SsoUser::arrayToIntTimeout($Input->P->RAW->timeout);
 
-	$user->lang = $Input->P->RAW->lang;
+	$user->FORM->lang = $Input->P->RAW->lang;
 
 	if (count($errors) === 0) {
 		if (Locale::set($user->lang)) {
@@ -87,33 +87,33 @@ ViewControl::edit();
 					'name' => 'FORM',
 					'admin' => 'VIEW') as $field => $type) { ?>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN($field) ?></td>
+		<td class="fieldname"><?= $user::COLUMN()->$field ?></td>
 		<td><?= $user->{$type}->{$field} ?></td>
 	</tr>
 <?php } ?>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN('lang') ?></td>
+		<td class="fieldname"><?= $user::COLUMN()->lang ?></td>
 		<td><?= $user->FORM->lang ?></td>
 	</tr>
 	<tr>
 		<th colspan="2"><?= $Input->HTML(L::label_setting_security_options) ?></th>
 	</tr>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN('restrictIP') ?></td>
+		<td class="fieldname"><?= $user::COLUMN()->restrictIP ?></td>
 		<td><?= $user->FORM->restrictIP ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="<?= $Input->HTML(L::help_click_for_display) ?>" class="pointer"/></td>
 	</tr>
 	<tr class="pointer" title="<?= $Input->HTML(L::help_click_for_hide) ?>">
 		<td colspan="2"><?= $Input->HTML(L::help_user_check_ip) ?></td>
 	</tr>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN('restrictAgent') ?></td>
+		<td class="fieldname"><?= $user::COLUMN()->restrictAgent ?></td>
 		<td><?= $user->FORM->restrictAgent ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="<?= $Input->HTML(L::help_click_for_display) ?>" class="pointer"/></td>
 	</tr>
 	<tr class="pointer" title="<?= $Input->HTML(L::help_click_for_hide) ?>">
 		<td colspan="2"><?= $Input->HTML(L::help_user_check_agent) ?></td>
 	</tr>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN('timeout') ?></td>
+		<td class="fieldname"><?= $user::COLUMN()->timeout ?></td>
 		<td><?= $user->FORM->timeout ?><img src="<?= SSO_WEB_RELATIVE ?>images/help.png" alt="aide" title="<?= $Input->HTML(L::help_click_for_display) ?>" class="pointer"/></td>
 	</tr>
 	<tr class="pointer" title="<?= $Input->HTML(L::help_click_for_hide) ?>">
@@ -138,12 +138,12 @@ ViewControl::edit();
 		<th colspan="2"><?= $Input->HTML(L::label_setting_statistics) ?></th>
 	</tr>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN('login_count') ?></td>
-		<td><?= $user->VIEW->login_count ?> (<?= $user::COLUMN('last_login') ?> : <?= $user->VIEW->last_login ?>)</td>
+		<td class="fieldname"><?= $user::COLUMN()->login_count ?></td>
+		<td><?= $user->VIEW->login_count ?> (<?= $user::COLUMN()->last_login ?> : <?= $user->VIEW->last_login ?>)</td>
 	</tr>
 	<tr>
-		<td class="fieldname"><?= $user::COLUMN('failed_login_count') ?></td>
-		<td><?= $user->VIEW->failed_login_count ?> (<?= $user::COLUMN('last_failed_login') ?> : <?= $user->VIEW->last_failed_login ?>)</td>
+		<td class="fieldname"><?= $user::COLUMN()->failed_login_count ?></td>
+		<td><?= $user->VIEW->failed_login_count ?> (<?= $user::COLUMN()->last_failed_login ?> : <?= $user->VIEW->last_failed_login ?>)</td>
 	</tr>
 </table>
 <script type="text/javascript">

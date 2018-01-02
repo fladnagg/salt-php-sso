@@ -145,7 +145,7 @@ ViewControl::edit();
 <table class="appli results">
 	<tr>
 <?php foreach($requests->columns as $col) {?>
-		<th><?= SsoCredential::COLUMN($col) ?></th>
+		<th><?= SsoCredential::COLUMN()->$col ?></th>
 <?php }?>
 	</tr>
 <?php foreach($requests->data as $row) {?>

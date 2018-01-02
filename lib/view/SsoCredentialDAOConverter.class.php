@@ -1,6 +1,6 @@
 <?php
 /**
- * SsoCredentialViewHelper class
+ * SsoCredentialDAOConverter class
  *
  * @author     Richaud Julien "Fladnag"
  * @package    sso\view
@@ -8,14 +8,14 @@
 namespace sso;
 
 use salt\Base;
-use salt\BaseViewHelper;
+use salt\DAOConverter;
 use salt\Field;
 use salt\FormHelper;
 
 /**
- * ViewHelper for Credential
+ * DAOConverter for Credential
  */
-class SsoCredentialViewHelper extends BaseViewHelper {
+class SsoCredentialDAOConverter extends DAOConverter {
 
 	/**
 	 * {@inheritDoc}
@@ -24,7 +24,7 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 	 * @param mixed $value the value to display
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::show()
+	 * @see \salt\DAOConverter::show()
 	 */
 	public function show(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
@@ -44,7 +44,7 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 	 * @param mixed $value the value to edit
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::edit()
+	 * @see \salt\DAOConverter::edit()
 	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
@@ -71,19 +71,19 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 					$applis[$value] = $params['applis'][$value];
 				}
 
-				$groupes = SsoGroupableViewHelper::getGroupOptions(SsoGroupElement::TYPE_APPLI, $params['tooltip']);
+				$groupes = SsoGroupableDAOConverter::getGroupOptions(SsoGroupElement::TYPE_APPLI, $params['tooltip']);
 				foreach($groupes as $k => $v) {
-					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
+					$groupes[SsoGroupableDAOConverter::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
 				$opts = array(''=>array('value' => '', 'title' => ''))+$applis+array(L::admin_group => array('group' => $groupes));
 
 				if (($value === NULL) && ($object->appli_group !== NULL)) {
-					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->appli_group;
+					$value = SsoGroupableDAOConverter::PREFIX_GROUP_VALUE.$object->appli_group;
 				}
 
 				$result = FormHelper::select($field->name, $opts, $value, array('selectTitle'), array('onchange' => 'javascript: selectTitle(this)'))
- 				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=applis&amp;edit='.substr($value, strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE)).'">'
+ 				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=applis&amp;edit='.substr($value, strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE)).'">'
  				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify_group).'" title="'.$Input->HTML(L::button_modify_group).'"/>'
  				.'</a>';
 				;
@@ -103,19 +103,19 @@ class SsoCredentialViewHelper extends BaseViewHelper {
 					$users[$value] = $params['users'][$value];
 				}
 
-				$groupes = SsoGroupableViewHelper::getGroupOptions(SsoGroupElement::TYPE_USER, $params['tooltip']);
+				$groupes = SsoGroupableDAOConverter::getGroupOptions(SsoGroupElement::TYPE_USER, $params['tooltip']);
 				foreach($groupes as $k => $v) {
-					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
+					$groupes[SsoGroupableDAOConverter::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
 				$opts = array(''=>array('value' => '', 'title' => ''))+$users+array(L::admin_group => array('group' => $groupes));
 
 				if (($value === NULL) && ($object->user_group !== NULL)) {
-					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->user_group;
+					$value = SsoGroupableDAOConverter::PREFIX_GROUP_VALUE.$object->user_group;
 				}
 
 				$result = FormHelper::select($field->name, $opts, $value, array('selectTitle'), array('onchange' => 'javascript: selectTitle(this)'))
-				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=users&amp;edit='.substr($value, strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE)).'">'
+				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=users&amp;edit='.substr($value, strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE)).'">'
 				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify_group).'" title="'.$Input->HTML(L::button_modify_group).'"/>'
 				.'</a>';
 				;

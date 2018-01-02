@@ -69,7 +69,7 @@ if ($Input->P->ISSET->save || $Input->P->ISSET->save_recommended) {
 				$theme = $profil->getThemeObject();
 				foreach($Input->P->RAW->options as $field => $value) {
 					if ($field !== 'theme') {
-						$theme->$field = $value;
+						$theme->FORM->$field = $value;
 					}
 				}
 				$profil->setThemeObject($theme);
@@ -156,7 +156,7 @@ if ($Input->P->ISSET->preview) {
 				$theme = $profil->getThemeObject();
 				foreach($Input->P->RAW->options as $field => $value) {
 					if ($field !== 'theme') {
-						$theme->$field = $value;
+						$theme->FORM->$field = $value;
 					}
 				}
 				$profil->setThemeObject($theme);
@@ -213,7 +213,7 @@ ViewControl::edit();
 <?php }?>
 <table class="theme results options">
 	<tr>
-		<th class="compact"><?= SsoProfil::COLUMN('theme') ?></th>
+		<th class="compact"><?= SsoProfil::COLUMN()->theme ?></th>
 		<td><?= $profile->FORM->theme ?>
 			&nbsp;<?= FormHelper::input('load', 'submit', L::button_load_theme_options) ?>
 		</td>
@@ -230,7 +230,7 @@ ViewControl::edit();
 	<tr class="hidden"><td colspan="2"><?= FormHelper::input('theme', 'hidden', $profile->theme) ?></td></tr>
 <?php 	foreach($theme->getOptions() as $fieldName => $value) {?>
 	<tr class="options">
-		<td class="field compact" ><?= $theme->COLUMN($fieldName) ?></td>
+		<td class="field compact" ><?= $theme->COLUMN()->$fieldName ?></td>
 		<td class="input"><?= $theme->FORM->$fieldName?></td>
 	</tr>
 <?php 	} ?>

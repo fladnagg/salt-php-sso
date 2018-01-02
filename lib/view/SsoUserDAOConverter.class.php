@@ -1,6 +1,6 @@
 <?php
 /**
- * SsoUserViewHelper class
+ * SsoUserDAOConverter class
  *
  * @author     Richaud Julien "Fladnag"
  * @package    sso\view
@@ -10,30 +10,34 @@ namespace sso;
 use salt\Base;
 use salt\Field;
 use salt\FormHelper;
+use salt\Model;
 
 /**
- * ViewHelper for SsoUser
+ * DAOConverter for SsoUser
  */
-class SsoUserViewHelper extends SsoGroupableViewHelper {
+class SsoUserDAOConverter extends SsoGroupableDAOConverter {
 
 	/**
 	 * {@inheritDoc}
+	 * @param Base $object The singleton object
 	 * @param Field $field the field to display
+	 * @param mixed $value the default value
 	 * @param string $format format to use for change the output
-	 * @see \sso\SsoGroupableViewHelper::column()
+	 * @param mixed $params others parameters
+	 * @see \sso\SsoGroupableDAOConverter::column()
 	 */
-	public function column(Field $field, $format=NULL) {
+	public function column(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
 		if ($field->name === 'auths') {
 			return $Input->HTML(L::admin_credential);
 		} else if ($field->name === 'password') {
-			return parent::column($field, $format).'&nbsp;'.
+			return parent::column($object, $field, $value, $format, $params).'&nbsp;'.
 				'<img src="'.SSO_WEB_RELATIVE.'images/help.png" class="aide" alt="aide" '.
 					'title="'.$Input->HTML(L::help_user_password_locale(SsoAuthMethod::MODEL()->type->values[SsoAuthMethod::TYPE_LOCAL])).'"/>';
 		} else if ($field->name === 'password2') {
 			return $Input->HTML(L::field_confirm_password);
 		} else {
-			return parent::column($field, $format);
+			return parent::column($object, $field, $value, $format, $params);
 		}
 	}
 
@@ -44,7 +48,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 	 * @param mixed $value the value to display
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \salt\BaseViewHelper::text()
+	 * @see \salt\DAOConverter::text()
 	 */
 	public function text(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
@@ -68,7 +72,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 	 * @param mixed $value the value to display
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \sso\SsoGroupableViewHelper::show()
+	 * @see \sso\SsoGroupableDAOConverter::show()
 	 */
 	public function show(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
@@ -120,7 +124,7 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 	 * @param mixed $value the value to edit
 	 * @param string $format format to use
 	 * @param mixed[] $params parameter passed to Base->FORM or Base->VIEW method
-	 * @see \sso\SsoGroupableViewHelper::edit()
+	 * @see \sso\SsoGroupableDAOConverter::edit()
 	 */
 	public function edit(Base $object, Field $field, $value, $format, $params) {
 		global $Input;
@@ -160,26 +164,26 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 					}
 				}
 
-				$groupes = SsoGroupableViewHelper::getGroupOptions(SsoGroupElement::TYPE_AUTH, $params['tooltip']);
+				$groupes = SsoGroupableDAOConverter::getGroupOptions(SsoGroupElement::TYPE_AUTH, $params['tooltip']);
 				foreach($groupes as $k => $v) {
-					$groupes[SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$k]=$v;
+					$groupes[SsoGroupableDAOConverter::PREFIX_GROUP_VALUE.$k]=$v;
 					unset($groupes[$k]);
 				}
 				$opts = array(''=>array('value' => '', 'title' => ''))+$authsMethods+array(L::admin_group => array('group' => $groupes));
 
 				if (($value === NULL) && ($object->auth_group !== NULL)) {
-					$value = SsoGroupableViewHelper::PREFIX_GROUP_VALUE.$object->auth_group;
+					$value = SsoGroupableDAOConverter::PREFIX_GROUP_VALUE.$object->auth_group;
 				}
 
 				$result = FormHelper::select($field->name, $opts, $value, array('selectTitle'), array('onchange' => 'javascript: selectTitle(this)'))
-				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=auths&amp;edit='.substr($value, strlen(SsoGroupableViewHelper::PREFIX_GROUP_VALUE)).'">'
+				.' <a href="'.SSO_WEB_RELATIVE.'?page=admin&amp;subpage=groups&amp;type=auths&amp;edit='.substr($value, strlen(SsoGroupableDAOConverter::PREFIX_GROUP_VALUE)).'">'
 				.'<img src="'.SSO_WEB_RELATIVE.'images/edit-out.png" alt="'.$Input->HTML(L::button_modify_group).'" title="'.$Input->HTML(L::button_modify_group).'"/>'
 				.'</a>';
 				;
 
 				return $result;
 			break;
-			
+
 			case 'auths':
 				if ($format === 'search') {
 					if ($applications === NULL) {
@@ -197,13 +201,13 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 					$params['size'] = 20;
 				}
 			break;
-			
+
 			case 'admin' :
 				if ($format === 'search') {
 					return FormHelper::select('admin', array('' => L::all, '1' => L::yes, '0' => L::no));
 				}
 			break;
-			
+
 			case 'state':
 				if ($format === 'search') {
 					$field->nullable = TRUE;
@@ -213,5 +217,28 @@ class SsoUserViewHelper extends SsoGroupableViewHelper {
 
 		}
 		return parent::edit($object, $field, $value, $format, $params);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param Base $object object that contains the value
+	 * @param Field $field field
+	 * @param mixed $value the value to convert
+	 * @param string $format the format of the value
+	 * @param mixed[] $params others parameters passed to convert function
+	 * @return mixed the converted value
+	 * @see \salt\DAOConverter::setterInput()
+	 */
+	public function setterInput(Base $object, Field $field, $value, $format, $params) {
+
+		switch($field->name) {
+			case 'timeout':
+				if (is_array($value)) {
+					$value = SsoUser::arrayToIntTimeout($value);
+				}
+			break;
+		}
+
+		return parent::setterInput($object, $field, $value, $format, $params);
 	}
 }

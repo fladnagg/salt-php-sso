@@ -47,8 +47,6 @@ class SsoProfil extends Base {
 	 * @see \salt\Base::metadata()
 	 */
 	protected function metadata() {
-		parent::registerHelper(__NAMESPACE__.'\SsoProfilViewHelper');
-
 		self::MODEL()
 			->registerId('id')
 			->registerTableName('sso_profile')
@@ -270,7 +268,7 @@ class SsoProfil extends Base {
 	 * @return Theme
 	 */
 	public function getThemeObject() {
-		return Theme::get($this);
+		return Theme::getTheme($this);
 	}
 
 	/**
@@ -278,6 +276,6 @@ class SsoProfil extends Base {
 	 * @param Theme $theme
 	 */
 	public function setThemeObject(Theme $theme) {
-		Theme::set($this, $theme);
+		Theme::setTheme($this, $theme);
 	}
 }

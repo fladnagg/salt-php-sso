@@ -44,8 +44,6 @@ class SsoCredential extends Base implements SsoAdministrable {
 	 * @see \salt\Base::metadata()
 	 */
 	protected function metadata() {
-		parent::registerHelper(__NAMESPACE__.'\SsoCredentialViewHelper');
-
 		self::MODEL()
 			->registerId('id')
 			->registerTableName('sso_credential')
